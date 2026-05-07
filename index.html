@@ -253,7 +253,9 @@
       html += `</div>`;
       div.innerHTML = html;
       container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
+      setTimeout(() => {
+  container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+}, 0);
     }
 
     function renderArtefacts() {
