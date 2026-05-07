@@ -576,9 +576,20 @@ ${prompt}
 
         console.log(data);
 
-        const text =
-          data?.choices?.[0]?.message?.content ||
-          JSON.stringify(data, null, 2);
+        console.log(data);
+
+let text = "";
+
+if (
+  data?.choices &&
+  data.choices.length > 0
+) {
+  text =
+    data.choices[0]?.message?.content ||
+    JSON.stringify(data.choices[0], null, 2);
+} else {
+  text = JSON.stringify(data, null, 2);
+}
 
         addMessage("ai", text);
 
