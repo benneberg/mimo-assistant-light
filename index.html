@@ -19,7 +19,7 @@
 
     html, body {
       height: 100%;
-      overflow: hidden; /* Prevent body scroll, handle inner scrolling */
+      overflow: hidden;
       background: #0a0f1c;
       color: #e2e8f0;
       font-family: 'Inter', system_ui, sans-serif;
@@ -35,7 +35,6 @@
       box-shadow: 0 8px 32px -4px rgb(0 0 0 / 0.4);
     }
 
-    /* Message Bubbles */
     .message-user { 
       background: linear-gradient(135deg, #3b82f6, #2563eb); 
       border-radius: 20px 20px 4px 20px; 
@@ -59,15 +58,74 @@
     .chat-container::-webkit-scrollbar { width: 6px; }
     .chat-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 20px; }
     
-    /* Touch optimizations */
     .touch-btn {
-      touch-action: manipulation; /* Prevent zoom on double tap */
+      touch-action: manipulation;
       user-select: none;
     }
 
-    /* Safe area for mobile notch/home bar */
     .safe-bottom {
       padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      display: flex; gap: 4px; align-items: center; padding: 8px 0;
+    }
+    .typing-indicator span {
+      width: 8px; height: 8px; background: #94a3b8; border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* Debug FAB (Fallback styles) */
+    #dc-fab {
+      position: fixed;
+      bottom: 80px; /* Above the chat input */
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 999; /* Below modals, above UI */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .dc-fab-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: white;
+      font-size: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Preview Modal */
+    #previewModal {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.9);
+      display: none; flex-direction: column;
+    }
+    #previewModal.active { display: flex; }
+    #previewFrame {
+      flex: 1; width: 100%; height: 100%; border: none; background: white;
     }
   </style>
 </head>
@@ -131,13 +189,7 @@
     <!-- CHAT PANEL -->
     <div id="panel-chat" class="w-full lg:w-2/5 flex flex-col hidden lg:flex min-h-0 border-l border-slate-700">
       
-     <!-- <div class="glass border-b border-slate-700 flex flex-shrink-0">
-        <button onclick="switchChatTab(0)" id="chatTab0" class="touch-btn flex-1 py-4 tab-active transition-all">Chat</button>
-        <button onclick="switchChatTab(1)" id="chatTab1" class="touch-btn flex-1 py-4 transition-all">Artefacts</button>
-      </div>
-      -->
-
-      <!-- Chat View Wrapper (Flex col to stick footer) -->
+      <!-- Chat View Wrapper -->
       <div id="chatView" class="flex-1 flex flex-col min-h-0 overflow-hidden">
         
         <!-- Chat Settings Bar -->
@@ -191,7 +243,7 @@
 
       <!-- Artefacts Content -->
       <div id="artefactsView" class="flex-1 hidden overflow-auto p-4 bg-slate-950">
-        <h3 class="text-lg font-medium mb-4 flex items-center gap-2 sticky top-0 bg-slate-950 py-2">
+        <h3 class="text-lg font-medium mb-4 flex items-center gap-2 sticky top-0 bg-slate-950 py-2 z-10">
           <i class="fa-solid fa-cube"></i> Artefacts &amp; Previews
         </h3>
         <div id="artefactsContainer" class="space-y-6"></div>
@@ -235,99 +287,28 @@
       </div>
     </div>
   </div>
-<!-- ══ FAB ════════════════════════════════════════════════════════ -->
 
-<button id="dc-fab" title="DevConsole">
-  <span id="dc-fab-icon">⌥</span>
-  <span class="dc-fab-badge" id="dc-error-badge">0</span>
-</button>
-
-<!-- ══ PANEL ══════════════════════════════════════════════════════ -->
-
-<div id="dc-panel">
-  <!-- Drag handle -->
-  <div id="dc-drag"></div>
-
-  <!-- Header -->
-
-  <div id="dc-header">
-    <span id="dc-title">DevConsole</span>
-    <span class="dc-pulse"></span>
-    <button class="dc-hbtn" id="dc-clear-btn" title="Clear active tab">🗑</button>
-    <button class="dc-hbtn" id="dc-copy-btn" title="Copy logs to clipboard">📋</button>
-    <button class="dc-hbtn" id="dc-minimize-btn" title="Minimize">−</button>
-  </div>
-
-  <!-- Tabs -->
-
-  <div id="dc-tabs">
-    <button class="dc-tab active" data-tab="console">Console<span class="dc-tab-count" id="cnt-console" style="display:none"></span></button>
-    <button class="dc-tab" data-tab="network">Network<span class="dc-tab-count" id="cnt-network" style="display:none"></span></button>
-    <button class="dc-tab" data-tab="storage">Storage</button>
-    <button class="dc-tab" data-tab="dom">DOM</button>
-    <button class="dc-tab" data-tab="system">System</button>
-    <button class="dc-tab" data-tab="settings">⚙</button>
-  </div>
-
-  <!-- ── CONSOLE ── -->
-
-  <div class="dc-panel active" id="panel-console">
-    <div class="dc-scroll" id="console-output"></div>
-    <div class="dc-repl">
-      <input class="dc-input" id="repl-input" placeholder="▶ execute javascript…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <button class="dc-run-btn" id="repl-run">RUN</button>
+  <!-- Preview Modal (Fullscreen) -->
+  <div id="previewModal">
+    <div class="bg-slate-900 p-2 flex justify-between items-center z-10">
+        <span class="text-xs text-slate-400 px-2">Live Preview</span>
+        <button onclick="closePreviewModal()" class="touch-btn bg-red-500/20 text-red-400 px-4 py-1 rounded-lg text-sm font-semibold">
+            <i class="fa-solid fa-xmark mr-1"></i> Close
+        </button>
     </div>
+    <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals"></iframe>
   </div>
 
-  <!-- ── NETWORK ── -->
+  <!-- Debug FAB -->
+  <button id="dc-fab" title="DevConsole">
+    <span id="dc-fab-icon">⌥</span>
+    <span class="dc-fab-badge" id="dc-error-badge">0</span>
+  </button>
 
-  <div class="dc-panel" id="panel-network">
-    <div class="dc-net-filter">
-      <input class="dc-filter-input" id="net-filter" placeholder="Filter by URL or method…">
-      <button class="dc-clear-btn" id="net-clear">Clear</button>
-    </div>
-    <div class="dc-scroll" id="network-output"></div>
+  <!-- Debugger Panel (Hidden by default, handled by debugger.js) -->
+  <div id="dc-panel" style="display:none;">
+     <!-- Contents injected by debugger.js -->
   </div>
-
-  <!-- ── STORAGE ── -->
-
-  <div class="dc-panel" id="panel-storage">
-    <div class="dc-storage-nav">
-      <button class="dc-st-btn active" data-storage="indexeddb">IndexedDB</button>
-      <button class="dc-st-btn" data-storage="localstorage">LocalStorage</button>
-      <button class="dc-st-btn" data-storage="sessionstorage">SessionStorage</button>
-    </div>
-    <div class="dc-storage-actions">
-      <button class="dc-clear-btn" id="storage-refresh">↺ Refresh</button>
-    </div>
-    <div class="dc-scroll" id="storage-output"></div>
-  </div>
-
-  <!-- ── DOM ── -->
-
-  <div class="dc-panel" id="panel-dom">
-    <div class="dc-dom-toolbar">
-      <button class="dc-dom-btn" id="dom-refresh-btn">↺ Refresh tree</button>
-      <button class="dc-dom-btn" id="dom-pick-btn">⊕ Pick element</button>
-      <button class="dc-dom-btn" id="dom-collapse-btn">Collapse all</button>
-    </div>
-    <div class="dc-scroll" id="dom-output"></div>
-  </div>
-
-  <!-- ── SYSTEM ── -->
-
-  <div class="dc-panel" id="panel-system">
-    <div class="dc-scroll">
-      <div class="dc-sys-grid" id="system-output"></div>
-    </div>
-  </div>
-
-  <!-- ── SETTINGS ── -->
-
-  <div class="dc-panel" id="panel-settings">
-    <div class="dc-scroll dc-settings-body" id="settings-output"></div>
-  </div>
-</div>
 
   <script>
     let editor, currentFile = null;
@@ -336,6 +317,7 @@
     let artefacts = [];
     let attachedImage = null;
     let currentMainTab = 0;
+    let saveTimeout;
 
     // Monaco Loader
     require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs" } });
@@ -350,7 +332,56 @@
         scrollBeyondLastLine: false,
         wordWrap: 'on'
       });
+
+      // Auto-save logic on editor change
+      editor.onDidChangeModelContent(() => {
+          if (currentFile) {
+              projectFiles[currentFile] = editor.getValue();
+              triggerSave();
+          }
+      });
     });
+
+    // --- Persistence ---
+    function triggerSave() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveProject, 1000); // Debounce 1s
+    }
+
+    function saveProject() {
+        try {
+            localStorage.setItem('mimo_project', JSON.stringify(projectFiles));
+            console.log("Project auto-saved");
+        } catch (e) {
+            console.warn("Storage full, could not save project", e);
+        }
+    }
+
+    function loadProject() {
+        const saved = localStorage.getItem('mimo_project');
+        if (saved) {
+            try {
+                const files = JSON.parse(saved);
+                if (Object.keys(files).length > 0) {
+                    // Merge into projectFiles
+                    for (let k in files) projectFiles[k] = files[k];
+                    
+                    // Update UI
+                    document.getElementById("fileCount").textContent = `${Object.keys(projectFiles).length} files (Restored)`;
+                    renderFileList();
+                    
+                    // Open first file
+                    const firstName = Object.keys(projectFiles)[0];
+                    if (firstName) {
+                        currentFile = firstName;
+                        if(editor) editor.setValue(projectFiles[firstName]);
+                    }
+                }
+            } catch(e) {
+                localStorage.removeItem('mimo_project'); // Corrupt data
+            }
+        }
+    }
 
     // Tab Switching Logic
     function switchMainTab(tab) {
@@ -358,21 +389,17 @@
       const editorPanel = document.getElementById("panel-editor");
       const chatPanel = document.getElementById("panel-chat");
       
-      // Desktop visibility
       if (window.innerWidth >= 1024) {
         editorPanel.classList.remove('hidden');
         chatPanel.classList.remove('hidden');
       } else {
-        // Mobile visibility
         editorPanel.classList.toggle('hidden', tab !== 0);
         chatPanel.classList.toggle('hidden', tab === 0);
         
-        // If switching to artefacts on mobile, show artefacts tab inside chat panel
-        if (tab === 2) switchChatTab(1); 
-        else if (tab === 1) switchChatTab(0);
+        if (tab === 2) { switchChatTab(1); chatPanel.classList.remove('hidden'); } 
+        else if (tab === 1) { switchChatTab(0); chatPanel.classList.remove('hidden'); }
       }
 
-      // Update tab UI
       for (let i = 0; i < 3; i++) {
         const el = document.getElementById(`mainTab${i}`);
         if (el) el.classList.toggle("tab-active", i === tab);
@@ -382,26 +409,29 @@
     function switchChatTab(tab) {
       document.getElementById("chatView").classList.toggle("hidden", tab !== 0);
       document.getElementById("artefactsView").classList.toggle("hidden", tab !== 1);
-      document.getElementById("chatTab0").classList.toggle("tab-active", tab === 0);
-      document.getElementById("chatTab1").classList.toggle("tab-active", tab === 1);
+      // Desktop tabs no longer exist in markup, but logic remains for mobile
     }
 
     // Message Logic
-    function addMessage(role, content, metadata = null) {
+    function addMessage(role, content, metadata = null, isThinking = false) {
       const container = document.getElementById("chatMessages");
       const div = document.createElement("div");
       div.className = `flex ${role === "user" ? "justify-end" : "justify-start"} items-end gap-2`;
+      div.id = `msg-${Date.now()}`;
       
       let html = `<div class="${role === "user" ? "message-user" : "message-ai"} max-w-[90%] sm:max-w-[85%] px-4 py-2.5 text-sm sm:text-base">`;
       
-      // Image attachment preview for user
       if (role === "user" && attachedImage) {
         html += `<img src="${attachedImage}" class="mb-2 max-h-32 rounded-lg">`;
       }
       
-      html += `<div class="whitespace-pre-wrap break-words">${escapeHtml(content)}</div>`;
+      if (isThinking) {
+          html += `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+          div.setAttribute('id', 'thinking-msg');
+      } else {
+          html += `<div class="whitespace-pre-wrap break-words">${escapeHtml(content)}</div>`;
+      }
 
-      // Metadata
       if (metadata && document.getElementById("showMetrics").checked) {
         html += `<div class="text-[10px] mt-2 pt-2 border-t border-slate-600/30 font-mono flex justify-between text-slate-400 opacity-70">
           <span>${metadata.model}</span><span>${metadata.latency}ms</span><span>${metadata.tokens || "?"} tok</span>
@@ -411,10 +441,16 @@
       div.innerHTML = html;
       container.appendChild(div);
       
-      // Auto-scroll
       setTimeout(() => {
         container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
       }, 50);
+      
+      return div;
+    }
+
+    function removeThinking() {
+        const el = document.getElementById('thinking-msg');
+        if (el) el.remove();
     }
 
     function escapeHtml(text) {
@@ -431,31 +467,61 @@
       container.innerHTML = artefacts.length === 0 ? 
         `<p class="text-center text-slate-500 py-20">No artefacts yet.</p>` : "";
 
+      // Show badge on mobile tab
+      const artefactTabBtn = document.getElementById('mainTab2');
+      if (artefactTabBtn && artefacts.length > 0) {
+          artefactTabBtn.innerHTML = `Artefacts (${artefacts.length})`;
+      }
+
       artefacts.forEach((artefact, i) => {
         const div = document.createElement("div");
         div.className = "artefact-card bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden";
         if (artefact.type === "image") {
           div.innerHTML = `<img src="${artefact.url}" class="w-full h-64 object-cover"><div class="p-4 text-xs font-mono opacity-70">${artefact.name}</div>`;
         } else if (artefact.type === "code") {
+          // Determine language for label
+          const lang = artefacts[i].lang || 'html';
           div.innerHTML = `
-            <div class="p-4 bg-slate-950 border-b border-slate-700 text-xs text-cyan-400 font-mono flex justify-between items-center">
-              <span>HTML Preview</span>
-              <button onclick="previewCode(${i})" class="touch-btn bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-3 py-1 rounded-lg"><i class="fa-solid fa-play mr-1"></i> Live Preview</button>
+            <div class="p-3 bg-slate-950 border-b border-slate-700 text-xs text-cyan-400 font-mono flex justify-between items-center">
+              <span>Code Snippet (${lang})</span>
+              <div class="flex gap-2">
+                <button onclick="copyArtefact(${i})" class="touch-btn bg-slate-700/50 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded"><i class="fa-regular fa-copy"></i></button>
+                <button onclick="previewCode(${i})" class="touch-btn bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-3 py-1 rounded-lg"><i class="fa-solid fa-play mr-1"></i> Preview</button>
+              </div>
             </div>
-            <pre class="p-4 text-xs overflow-auto max-h-80 font-mono">${escapeHtml(artefact.content)}</pre>`;
+            <pre class="p-4 text-xs overflow-auto max-h-60 font-mono bg-slate-950/50">${escapeHtml(artefact.content)}</pre>`;
         }
         container.appendChild(div);
       });
     }
 
+    window.copyArtefact = function(i) {
+        const a = artefacts[i];
+        if (a) {
+            navigator.clipboard.writeText(a.content);
+            // Visual feedback would be nice here, but alert is intrusive
+        }
+    }
+
     window.previewCode = function(i) {
       const a = artefacts[i];
       if (a && a.type === "code") {
-        const win = window.open("", "_blank");
-        win.document.write(a.content);
-        win.document.close();
+        const modal = document.getElementById('previewModal');
+        const frame = document.getElementById('previewFrame');
+        
+        // Write content to iframe
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        doc.open();
+        doc.write(a.content);
+        doc.close();
+
+        modal.classList.add('active');
       }
     };
+
+    window.closePreviewModal = function() {
+        document.getElementById('previewModal').classList.remove('active');
+    }
 
     // Image & Voice
     function triggerImageUpload() { document.getElementById("imageInput").click(); }
@@ -470,7 +536,7 @@
         document.getElementById("imagePreview").classList.remove("hidden");
       };
       reader.readAsDataURL(file);
-      e.target.value = ''; // Reset input
+      e.target.value = ''; 
     });
 
     function removeImage() {
@@ -480,14 +546,13 @@
 
     function startVoiceInput() {
       const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Speech) return alert("Voice not supported in this browser");
+      if (!Speech) return alert("Voice not supported");
       const rec = new Speech();
       rec.lang = "en-US";
       rec.onresult = e => {
           document.getElementById("promptInput").value = e.results[0][0].transcript;
           document.getElementById("promptInput").focus();
       };
-      rec.onerror = e => console.log(e.error);
       rec.start();
     }
 
@@ -498,22 +563,29 @@
 
       const model = document.getElementById("modelSelect").value;
       
-      // Add user message
       addMessage("user", prompt || "[Image]", { model });
       document.getElementById("promptInput").value = "";
-      removeImage(); // Clear image preview after sending
+      removeImage(); 
 
       const apiKey = localStorage.getItem("mimo_api_key");
-      if (!apiKey) return addMessage("ai", "Missing API Key. Click Settings to add it.");
+      if (!apiKey) return addMessage("ai", "Missing API Key. Click Settings.");
 
       const start = Date.now();
       document.getElementById("sendBtn").disabled = true;
       document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
+      // Add Thinking Indicator
+      addMessage("ai", "", null, true);
+
       try {
         let messages = [{ role: "user", content: prompt || "Describe this image" }];
         
-        // Vision Payload Structure
+        // System prompt to encourage conversation
+        const systemPrompt = { 
+            role: "system", 
+            content: "You are Mimo, a helpful dev assistant. When asked to create code or UI, provide a brief explanation first, then output the code in a markdown code block (e.g. ```html). Do not output raw HTML without markdown wrapping unless asked."
+        };
+
         if (attachedImage) {
           messages[0].content = [
             { type: "text", text: prompt || "Help with this image" },
@@ -524,7 +596,7 @@
         const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-          body: JSON.stringify({ model, messages, temperature: 0.4 })
+          body: JSON.stringify({ model, messages: [systemPrompt, ...messages], temperature: 0.4 })
         });
 
         if (!res.ok) throw new Error(`API Error: ${res.status}`);
@@ -532,20 +604,36 @@
         const data = await res.json();
         const text = data.choices?.[0]?.message?.content || "No response";
 
-        addMessage("ai", text, { model, latency: Date.now() - start, tokens: data.usage?.total_tokens });
+        removeThinking();
 
-        // Detect Artefacts
-        if (text.includes("http") && /\.(png|jpg|jpeg|webp)/i.test(text)) {
-          const url = text.match(/(https?:\/\/[^\s"')]+)/)[0];
-          artefacts.unshift({ type: "image", url, name: "Generated Image" });
-          renderArtefacts();
+        // --- PARSING LOGIC ---
+        let cleanText = text;
+        const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+        let match;
+        
+        // Find all code blocks
+        while ((match = codeBlockRegex.exec(text)) !== null) {
+            const lang = match[1] || 'code';
+            const code = match[2];
+            
+            // Add to artefacts
+            artefacts.unshift({ type: "code", content: code.trim(), lang: lang });
+            
+            // Remove code block from text
+            cleanText = cleanText.replace(match[0], ""); 
         }
-        if (text.includes("<!DOCTYPE") || text.includes("<html")) {
-          artefacts.unshift({ type: "code", content: text });
-          renderArtefacts();
+
+        // Add the remaining text as a message
+        // If text is empty but we have code, add a default message
+        if (cleanText.trim() === "" && artefacts.length > 0) {
+            cleanText = "Here is the code I generated for you.";
         }
+
+        addMessage("ai", cleanText.trim(), { model, latency: Date.now() - start, tokens: data.usage?.total_tokens });
+        renderArtefacts();
 
       } catch (e) {
+        removeThinking();
         addMessage("ai", "Error: " + e.message);
       } finally {
         document.getElementById("sendBtn").disabled = false;
@@ -558,20 +646,20 @@
       const file = e.target.files[0];
       if (!file) return;
       const zip = await JSZip.loadAsync(file);
-      let count = 0;
       
       // Clear existing
       for (const key in projectFiles) delete projectFiles[key];
       
       for (const name in zip.files) {
         if (zip.files[name].dir) continue;
-        // Filter out common non-text files or large files if needed
         projectFiles[name] = await zip.files[name].async("string");
-        count++;
       }
-      document.getElementById("fileCount").textContent = `${count} files`;
+      
+      document.getElementById("fileCount").textContent = `${Object.keys(projectFiles).length} files`;
       renderFileList();
-      addMessage("ai", `Loaded ${count} files from ${file.name}`);
+      addMessage("ai", `Loaded ${Object.keys(projectFiles).length} files.`);
+      
+      saveProject(); // Save new project
       e.target.value = '';
     });
 
@@ -588,8 +676,8 @@
             editor.setValue(projectFiles[name]);
             monaco.editor.setModelLanguage(editor.getModel(), getLang(name));
             if (window.innerWidth < 1024) {
-              toggleFilePanel(); // Close drawer on mobile
-              switchMainTab(0); // Switch to editor
+              toggleFilePanel(); 
+              switchMainTab(0); 
             }
             renderFileList();
           };
@@ -653,33 +741,29 @@
       }
     });
 
-    // Auto-save
-    setInterval(() => { 
-      if (currentFile && editor) projectFiles[currentFile] = editor.getValue(); 
-    }, 2000);
-
     // Init
     window.onload = () => {
       if (localStorage.getItem("mimo_api_key")) {
         document.getElementById("apiKeyInput").value = localStorage.getItem("mimo_api_key");
       }
       
-      // Set initial mobile state
       if (window.innerWidth < 1024) {
-        switchMainTab(0); // Start on Editor
+        switchMainTab(0); 
       }
       
+      loadProject(); // Load saved project
+      
       setTimeout(() => {
-        addMessage("ai", "Welcome back! Upload a project ZIP or ask me a question.");
+        addMessage("ai", "Welcome back! I've restored your last session. What would you like to build?");
       }, 300);
     };
 
-    // Handle Resize
     window.addEventListener('resize', () => {
       switchMainTab(currentMainTab);
     });
-
+    
   </script>
-    <script src="./debugger.js"></script>
+  <!-- Load Debugger at the end -->
+  <script src="./debugger.js"></script>
 </body>
 </html>
