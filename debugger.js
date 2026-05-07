@@ -70,9 +70,9 @@ function formatArg(a) {
       const s = JSON.stringify(a, null, 2);
       return `<pre>${escHtml(s)}</pre>`;
 
-```
+
 } catch(e) { return String(a); }
-```
+
 
 }
 return escHtml(String(a));
@@ -291,7 +291,7 @@ const storeNames = […db.objectStoreNames];
 let pending = storeNames.length;
 if (!pending) { db.close(); S.dbs.push(info); return res(info); }
 
-```
+
   storeNames.forEach(storeName => {
     inspectStore(db, storeName).then(storeInfo => {
       info.stores.push(storeInfo);
@@ -302,7 +302,7 @@ if (!pending) { db.close(); S.dbs.push(info); return res(info); }
     });
   });
 };
-```
+
 
 });
 }
