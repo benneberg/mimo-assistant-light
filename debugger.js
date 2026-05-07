@@ -775,53 +775,6 @@ addLog(‘log’, [‘✅ DevConsole v2.0 loaded — click ⌥ to open’]);
 
 })();
 
-// ══ DEMO FUNCTIONS ════════════════════════════════════════════════
-function demoFetch() {
-fetch(‘https://jsonplaceholder.typicode.com/posts/1’)
-.then(r => r.json())
-.then(d => console.log(‘Fetch result:’, d))
-.catch(e => console.error(‘Fetch failed:’, e));
-}
-
-function demoXHR() {
-const xhr = new XMLHttpRequest();
-xhr.open(‘GET’, ‘https://jsonplaceholder.typicode.com/users/1’);
-xhr.onload = () => console.info(‘XHR response:’, JSON.parse(xhr.responseText));
-xhr.onerror = () => console.error(‘XHR failed’);
-xhr.send();
-}
-
-function demoIDB() {
-const req = indexedDB.open(‘DemoApp’, 1);
-req.onupgradeneeded = e => {
-const db = e.target.result;
-if (!db.objectStoreNames.contains(‘users’)) {
-const store = db.createObjectStore(‘users’, { keyPath: ‘id’, autoIncrement: true });
-store.createIndex(‘email’, ‘email’, { unique: true });
-}
-if (!db.objectStoreNames.contains(‘sessions’)) {
-db.createObjectStore(‘sessions’, { keyPath: ‘token’ });
-}
-};
-req.onsuccess = e => {
-const db = e.target.result;
-const tx = db.transaction([‘users’, ‘sessions’], ‘readwrite’);
-tx.objectStore(‘users’).add({ name: ‘Alice’, email: ‘alice@example.com’, role: ‘admin’ });
-tx.objectStore(‘users’).add({ name: ‘Bob’,   email: ‘bob@example.com’,   role: ‘user’  });
-tx.objectStore(‘sessions’).add({ token: ‘abc123’, userId: 1, created: Date.now() });
-tx.oncomplete = () => { db.close(); console.log(‘IDB seeded — open Storage tab to explore’); };
-};
-req.onerror = () => console.error(‘IDB failed’, req.error);
-}
-
-function demoError() {
-try { null.property; } catch(e) { console.error(e); }
-}
-
-function demoPromise() {
-Promise.reject(new Error(‘Simulated rejection from promise chain’));
-}
-
 function spamLogs() {
 const types = [‘log’,‘warn’,‘error’,‘info’];
 for (let i = 0; i < 12; i++) {
