@@ -54,7 +54,6 @@
     .artefact-card { animation: fadeInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
 
-    /* Scrollbars */
     .chat-container::-webkit-scrollbar { width: 6px; }
     .chat-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 20px; }
     
@@ -67,7 +66,6 @@
       padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
     }
 
-    /* Typing Indicator */
     .typing-indicator {
       display: flex; gap: 4px; align-items: center; padding: 8px 0;
     }
@@ -83,39 +81,45 @@
       40% { transform: scale(1); }
     }
 
-    /* Debug FAB (Fallback styles) */
+    /* Debugger Styles (Basic fallback if CSS file missing) */
     #dc-fab {
-      position: fixed;
-      bottom: 80px; /* Above the chat input */
-      right: 20px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
+      position: fixed; bottom: 80px; right: 20px;
+      width: 56px; height: 56px; border-radius: 50%;
       background: linear-gradient(135deg, #8b5cf6, #6366f1);
-      color: white;
-      border: none;
+      color: white; border: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 999; /* Below modals, above UI */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      cursor: pointer;
+      z-index: 999; display: flex; align-items: center; justify-content: center;
+      font-size: 24px; cursor: pointer; transition: transform 0.2s;
     }
+    #dc-fab:active { transform: scale(0.95); }
+    
     .dc-fab-badge {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      background: #ef4444;
-      color: white;
-      font-size: 10px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: none;
-      align-items: center;
-      justify-content: center;
+      position: absolute; top: -4px; right: -4px;
+      background: #ef4444; color: white;
+      font-size: 10px; width: 18px; height: 18px;
+      border-radius: 50%; display: none; align-items: center; justify-content: center;
     }
+
+    #dc-panel {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      height: 50vh; max-height: 60vh; 
+      background: #0f172a; border-top: 1px solid #334155;
+      border-radius: 16px 16px 0 0;
+      display: none; flex-direction: column; z-index: 1000;
+      transform: translateY(100%); transition: transform 0.3s ease-out;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    }
+    #dc-panel.visible { transform: translateY(0); }
+    
+    /* Required classes for debugger.js to function without external CSS */
+    .dc-panel { display: none; flex-direction: column; height: 100%; }
+    .dc-panel.active { display: flex; }
+    .dc-scroll { overflow-y: auto; flex: 1; padding: 8px; font-family: monospace; font-size: 12px; }
+    .dc-tab { padding: 8px 16px; background: transparent; border: none; color: #94a3b8; cursor: pointer; border-bottom: 2px solid transparent; }
+    .dc-tab.active { color: #22d3ee; border-bottom-color: #22d3ee; }
+    .dc-header { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #334155; align-items: center; }
+    .dc-hbtn { background: #1e293b; border: none; color: #94a3b8; padding: 4px 8px; border-radius: 6px; cursor: pointer; margin-left: 4px; }
+    .dc-drag { height: 6px; background: #334155; width: 40px; border-radius: 3px; margin: 6px auto; cursor: ns-resize; }
 
     /* Preview Modal */
     #previewModal {
@@ -176,7 +180,6 @@
         </button>
       </div>
 
-      <!-- File List (Visible on Desktop) -->
       <div id="filePanel" class="border-b border-slate-700 max-h-60 overflow-auto bg-slate-950 hidden lg:block flex-shrink-0">
         <div id="fileList" class="divide-y divide-slate-800"></div>
       </div>
@@ -189,10 +192,8 @@
     <!-- CHAT PANEL -->
     <div id="panel-chat" class="w-full lg:w-2/5 flex flex-col hidden lg:flex min-h-0 border-l border-slate-700">
       
-      <!-- Chat View Wrapper -->
       <div id="chatView" class="flex-1 flex flex-col min-h-0 overflow-hidden">
         
-        <!-- Chat Settings Bar -->
         <div class="p-3 glass border-b border-slate-700 flex gap-3 items-center flex-shrink-0">
           <select id="modelSelect" class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2 text-sm appearance-none cursor-pointer">
             <option value="mimo-v2.5-pro">mimo-v2.5-pro (Vision)</option>
@@ -205,12 +206,8 @@
           </label>
         </div>
 
-        <!-- Messages List (Scrollable Area) -->
-        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 chat-container min-h-0 overscroll-contain">
-            <!-- Messages injected here -->
-        </div>
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 chat-container min-h-0 overscroll-contain"></div>
 
-        <!-- Input Footer (Fixed Bottom) -->
         <div class="glass border-t border-slate-700 p-3 safe-bottom flex-shrink-0">
           <div id="imagePreview" class="hidden mb-3 relative w-fit">
             <img id="previewImg" class="h-20 rounded-xl object-cover border border-slate-600">
@@ -241,7 +238,6 @@
         </div>
       </div>
 
-      <!-- Artefacts Content -->
       <div id="artefactsView" class="flex-1 hidden overflow-auto p-4 bg-slate-950">
         <h3 class="text-lg font-medium mb-4 flex items-center gap-2 sticky top-0 bg-slate-950 py-2 z-10">
           <i class="fa-solid fa-cube"></i> Artefacts &amp; Previews
@@ -299,21 +295,80 @@
     <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals"></iframe>
   </div>
 
-  <!-- Debug FAB -->
+  <!-- ══ DEBUGGER HTML STRUCTURE (Required for debugger.js) ══ -->
+  
   <button id="dc-fab" title="DevConsole">
     <span id="dc-fab-icon">⌥</span>
     <span class="dc-fab-badge" id="dc-error-badge">0</span>
   </button>
 
-  <!-- Debugger Panel (Hidden by default, handled by debugger.js) -->
-  <div id="dc-panel" style="display:none;">
-     <!-- Contents injected by debugger.js -->
+  <div id="dc-panel">
+    <div id="dc-drag" class="dc-drag"></div>
+    <div id="dc-header" class="dc-header">
+      <span id="dc-title">DevConsole</span>
+      <div>
+        <button class="dc-hbtn" id="dc-clear-btn" title="Clear active tab">🗑</button>
+        <button class="dc-hbtn" id="dc-copy-btn" title="Copy logs">📋</button>
+        <button class="dc-hbtn" id="dc-minimize-btn" title="Minimize">−</button>
+      </div>
+    </div>
+    <div id="dc-tabs" style="display:flex; border-bottom:1px solid #334155; background:#0f172a;">
+      <button class="dc-tab active" data-tab="console">Console<span class="dc-tab-count" id="cnt-console"></span></button>
+      <button class="dc-tab" data-tab="network">Network<span class="dc-tab-count" id="cnt-network"></span></button>
+      <button class="dc-tab" data-tab="storage">Storage</button>
+      <button class="dc-tab" data-tab="dom">DOM</button>
+      <button class="dc-tab" data-tab="system">System</button>
+      <button class="dc-tab" data-tab="settings">⚙</button>
+    </div>
+
+    <div class="dc-panel active" id="panel-console">
+      <div class="dc-scroll" id="console-output"></div>
+      <div style="padding:8px; border-top:1px solid #334155; display:flex; gap:4px;">
+        <input class="dc-input" id="repl-input" placeholder="▶ execute javascript…" style="flex:1; background:#1e293b; border:none; padding:8px; border-radius:6px; color:white; font-family:monospace;">
+        <button class="dc-hbtn" id="repl-run">RUN</button>
+      </div>
+    </div>
+
+    <div class="dc-panel" id="panel-network">
+      <div style="padding:8px; display:flex; gap:4px;">
+        <input class="dc-filter-input" id="net-filter" placeholder="Filter..." style="flex:1; background:#1e293b; border:none; padding:8px; border-radius:6px; color:white;">
+        <button class="dc-hbtn" id="net-clear">Clear</button>
+      </div>
+      <div class="dc-scroll" id="network-output"></div>
+    </div>
+
+    <div class="dc-panel" id="panel-storage">
+      <div style="padding:8px; border-bottom:1px solid #334155; display:flex; gap:4px;">
+         <button class="dc-tab active" data-storage="indexeddb" style="font-size:10px; padding:4px 8px;">IndexedDB</button>
+         <button class="dc-tab" data-storage="localstorage" style="font-size:10px; padding:4px 8px;">Local</button>
+         <button class="dc-tab" data-storage="sessionstorage" style="font-size:10px; padding:4px 8px;">Session</button>
+      </div>
+      <div class="dc-scroll" id="storage-output"></div>
+    </div>
+
+    <div class="dc-panel" id="panel-dom">
+      <div style="padding:8px; display:flex; gap:4px;">
+        <button class="dc-hbtn" id="dom-refresh-btn">↺</button>
+        <button class="dc-hbtn" id="dom-pick-btn">⊕ Pick</button>
+        <button class="dc-hbtn" id="dom-collapse-btn">Collapse</button>
+      </div>
+      <div class="dc-scroll" id="dom-output"></div>
+    </div>
+
+    <div class="dc-panel" id="panel-system">
+      <div class="dc-scroll" id="system-output"></div>
+    </div>
+
+    <div class="dc-panel" id="panel-settings">
+      <div class="dc-scroll" id="settings-output"></div>
+    </div>
   </div>
 
+  <!-- SCRIPTS -->
   <script>
     let editor, currentFile = null;
     const projectFiles = {};
-    let projectContext = "";
+    let projectContext = ""; // This will hold the indexed text
     let artefacts = [];
     let attachedImage = null;
     let currentMainTab = 0;
@@ -333,7 +388,6 @@
         wordWrap: 'on'
       });
 
-      // Auto-save logic on editor change
       editor.onDidChangeModelContent(() => {
           if (currentFile) {
               projectFiles[currentFile] = editor.getValue();
@@ -345,15 +399,14 @@
     // --- Persistence ---
     function triggerSave() {
         clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(saveProject, 1000); // Debounce 1s
+        saveTimeout = setTimeout(saveProject, 1000);
     }
 
     function saveProject() {
         try {
             localStorage.setItem('mimo_project', JSON.stringify(projectFiles));
-            console.log("Project auto-saved");
         } catch (e) {
-            console.warn("Storage full, could not save project", e);
+            console.warn("Storage full", e);
         }
     }
 
@@ -363,14 +416,9 @@
             try {
                 const files = JSON.parse(saved);
                 if (Object.keys(files).length > 0) {
-                    // Merge into projectFiles
                     for (let k in files) projectFiles[k] = files[k];
-                    
-                    // Update UI
                     document.getElementById("fileCount").textContent = `${Object.keys(projectFiles).length} files (Restored)`;
                     renderFileList();
-                    
-                    // Open first file
                     const firstName = Object.keys(projectFiles)[0];
                     if (firstName) {
                         currentFile = firstName;
@@ -378,12 +426,12 @@
                     }
                 }
             } catch(e) {
-                localStorage.removeItem('mimo_project'); // Corrupt data
+                localStorage.removeItem('mimo_project');
             }
         }
     }
 
-    // Tab Switching Logic
+    // Tab Switching
     function switchMainTab(tab) {
       currentMainTab = tab;
       const editorPanel = document.getElementById("panel-editor");
@@ -395,7 +443,6 @@
       } else {
         editorPanel.classList.toggle('hidden', tab !== 0);
         chatPanel.classList.toggle('hidden', tab === 0);
-        
         if (tab === 2) { switchChatTab(1); chatPanel.classList.remove('hidden'); } 
         else if (tab === 1) { switchChatTab(0); chatPanel.classList.remove('hidden'); }
       }
@@ -409,7 +456,6 @@
     function switchChatTab(tab) {
       document.getElementById("chatView").classList.toggle("hidden", tab !== 0);
       document.getElementById("artefactsView").classList.toggle("hidden", tab !== 1);
-      // Desktop tabs no longer exist in markup, but logic remains for mobile
     }
 
     // Message Logic
@@ -417,7 +463,6 @@
       const container = document.getElementById("chatMessages");
       const div = document.createElement("div");
       div.className = `flex ${role === "user" ? "justify-end" : "justify-start"} items-end gap-2`;
-      div.id = `msg-${Date.now()}`;
       
       let html = `<div class="${role === "user" ? "message-user" : "message-ai"} max-w-[90%] sm:max-w-[85%] px-4 py-2.5 text-sm sm:text-base">`;
       
@@ -432,9 +477,12 @@
           html += `<div class="whitespace-pre-wrap break-words">${escapeHtml(content)}</div>`;
       }
 
+      // Only show metadata if it exists (fix for 'undefinedms')
       if (metadata && document.getElementById("showMetrics").checked) {
+        const lat = metadata.latency ? `${metadata.latency}ms` : '';
+        const tok = metadata.tokens ? `${metadata.tokens} tok` : '? tok';
         html += `<div class="text-[10px] mt-2 pt-2 border-t border-slate-600/30 font-mono flex justify-between text-slate-400 opacity-70">
-          <span>${metadata.model}</span><span>${metadata.latency}ms</span><span>${metadata.tokens || "?"} tok</span>
+          <span>${metadata.model}</span><span>${lat}</span><span>${tok}</span>
         </div>`;
       }
       html += `</div>`;
@@ -467,7 +515,6 @@
       container.innerHTML = artefacts.length === 0 ? 
         `<p class="text-center text-slate-500 py-20">No artefacts yet.</p>` : "";
 
-      // Show badge on mobile tab
       const artefactTabBtn = document.getElementById('mainTab2');
       if (artefactTabBtn && artefacts.length > 0) {
           artefactTabBtn.innerHTML = `Artefacts (${artefacts.length})`;
@@ -479,7 +526,6 @@
         if (artefact.type === "image") {
           div.innerHTML = `<img src="${artefact.url}" class="w-full h-64 object-cover"><div class="p-4 text-xs font-mono opacity-70">${artefact.name}</div>`;
         } else if (artefact.type === "code") {
-          // Determine language for label
           const lang = artefacts[i].lang || 'html';
           div.innerHTML = `
             <div class="p-3 bg-slate-950 border-b border-slate-700 text-xs text-cyan-400 font-mono flex justify-between items-center">
@@ -497,10 +543,7 @@
 
     window.copyArtefact = function(i) {
         const a = artefacts[i];
-        if (a) {
-            navigator.clipboard.writeText(a.content);
-            // Visual feedback would be nice here, but alert is intrusive
-        }
+        if (a) navigator.clipboard.writeText(a.content);
     }
 
     window.previewCode = function(i) {
@@ -508,13 +551,10 @@
       if (a && a.type === "code") {
         const modal = document.getElementById('previewModal');
         const frame = document.getElementById('previewFrame');
-        
-        // Write content to iframe
         const doc = frame.contentDocument || frame.contentWindow.document;
         doc.open();
         doc.write(a.content);
         doc.close();
-
         modal.classList.add('active');
       }
     };
@@ -574,17 +614,20 @@
       document.getElementById("sendBtn").disabled = true;
       document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
-      // Add Thinking Indicator
       addMessage("ai", "", null, true);
 
       try {
         let messages = [{ role: "user", content: prompt || "Describe this image" }];
         
-        // System prompt to encourage conversation
-        const systemPrompt = { 
-            role: "system", 
-            content: "You are Mimo, a helpful dev assistant. When asked to create code or UI, provide a brief explanation first, then output the code in a markdown code block (e.g. ```html). Do not output raw HTML without markdown wrapping unless asked."
-        };
+        // System Prompt Construction
+        let systemContent = "You are Mimo, a helpful dev assistant. When asked to create code, output it in a markdown code block.";
+        
+        // *** FIX: Inject Context ***
+        if (projectContext) {
+            systemContent += "\n\n--- PROJECT CONTEXT ---\nThe user has uploaded the following project files. Use this context to answer questions.\n" + projectContext;
+        }
+
+        const systemPrompt = { role: "system", content: systemContent };
 
         if (attachedImage) {
           messages[0].content = [
@@ -606,25 +649,17 @@
 
         removeThinking();
 
-        // --- PARSING LOGIC ---
         let cleanText = text;
         const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
         let match;
         
-        // Find all code blocks
         while ((match = codeBlockRegex.exec(text)) !== null) {
             const lang = match[1] || 'code';
             const code = match[2];
-            
-            // Add to artefacts
             artefacts.unshift({ type: "code", content: code.trim(), lang: lang });
-            
-            // Remove code block from text
             cleanText = cleanText.replace(match[0], ""); 
         }
 
-        // Add the remaining text as a message
-        // If text is empty but we have code, add a default message
         if (cleanText.trim() === "" && artefacts.length > 0) {
             cleanText = "Here is the code I generated for you.";
         }
@@ -647,7 +682,6 @@
       if (!file) return;
       const zip = await JSZip.loadAsync(file);
       
-      // Clear existing
       for (const key in projectFiles) delete projectFiles[key];
       
       for (const name in zip.files) {
@@ -657,9 +691,9 @@
       
       document.getElementById("fileCount").textContent = `${Object.keys(projectFiles).length} files`;
       renderFileList();
-      addMessage("ai", `Loaded ${Object.keys(projectFiles).length} files.`);
+      addMessage("ai", `Loaded ${Object.keys(projectFiles).length} files. Click "Index" to make me aware of their contents.`);
       
-      saveProject(); // Save new project
+      saveProject();
       e.target.value = '';
     });
 
@@ -698,9 +732,15 @@
       const entries = Object.entries(projectFiles);
       if (entries.length === 0) return addMessage("ai", "No files to index. Upload a ZIP.");
       
-      entries.slice(0, 20).forEach(([n, c]) => ctx += `FILE: ${n}\n${c.slice(0, 1500)}\n---\n`);
+      entries.slice(0, 40).forEach(([n, c]) => ctx += `FILE: ${n}\n${c.slice(0, 2000)}\n---\n`); // Increased slice for better context
       projectContext = ctx;
-      addMessage("ai", `Indexed ${entries.length} files into context.`);
+      
+      // Save context to localStorage so it persists
+      try {
+          localStorage.setItem('mimo_project_context', ctx);
+      } catch(e) {}
+      
+      addMessage("ai", `Indexed ${entries.length} files. I am now aware of the project structure and content.`);
     };
 
     document.getElementById("exportZipBtn").onclick = async () => {
@@ -727,7 +767,6 @@
       document.getElementById("fileDrawer").classList.toggle("hidden");
     }
 
-    // Auto-resize textarea
     const txt = document.getElementById("promptInput");
     txt.addEventListener("input", () => {
       txt.style.height = 'auto';
@@ -747,11 +786,15 @@
         document.getElementById("apiKeyInput").value = localStorage.getItem("mimo_api_key");
       }
       
+      // Restore context
+      const savedCtx = localStorage.getItem('mimo_project_context');
+      if (savedCtx) projectContext = savedCtx;
+      
       if (window.innerWidth < 1024) {
         switchMainTab(0); 
       }
       
-      loadProject(); // Load saved project
+      loadProject();
       
       setTimeout(() => {
         addMessage("ai", "Welcome back! I've restored your last session. What would you like to build?");
@@ -763,7 +806,6 @@
     });
     
   </script>
-  <!-- Load Debugger at the end -->
   <script src="./debugger.js"></script>
 </body>
 </html>
