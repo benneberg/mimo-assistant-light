@@ -236,6 +236,99 @@
       </div>
     </div>
   </div>
+<!-- ══ FAB ════════════════════════════════════════════════════════ -->
+
+<button id="dc-fab" title="DevConsole">
+  <span id="dc-fab-icon">⌥</span>
+  <span class="dc-fab-badge" id="dc-error-badge">0</span>
+</button>
+
+<!-- ══ PANEL ══════════════════════════════════════════════════════ -->
+
+<div id="dc-panel">
+  <!-- Drag handle -->
+  <div id="dc-drag"></div>
+
+  <!-- Header -->
+
+  <div id="dc-header">
+    <span id="dc-title">DevConsole</span>
+    <span class="dc-pulse"></span>
+    <button class="dc-hbtn" id="dc-clear-btn" title="Clear active tab">🗑</button>
+    <button class="dc-hbtn" id="dc-copy-btn" title="Copy logs to clipboard">📋</button>
+    <button class="dc-hbtn" id="dc-minimize-btn" title="Minimize">−</button>
+  </div>
+
+  <!-- Tabs -->
+
+  <div id="dc-tabs">
+    <button class="dc-tab active" data-tab="console">Console<span class="dc-tab-count" id="cnt-console" style="display:none"></span></button>
+    <button class="dc-tab" data-tab="network">Network<span class="dc-tab-count" id="cnt-network" style="display:none"></span></button>
+    <button class="dc-tab" data-tab="storage">Storage</button>
+    <button class="dc-tab" data-tab="dom">DOM</button>
+    <button class="dc-tab" data-tab="system">System</button>
+    <button class="dc-tab" data-tab="settings">⚙</button>
+  </div>
+
+  <!-- ── CONSOLE ── -->
+
+  <div class="dc-panel active" id="panel-console">
+    <div class="dc-scroll" id="console-output"></div>
+    <div class="dc-repl">
+      <input class="dc-input" id="repl-input" placeholder="▶ execute javascript…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="dc-run-btn" id="repl-run">RUN</button>
+    </div>
+  </div>
+
+  <!-- ── NETWORK ── -->
+
+  <div class="dc-panel" id="panel-network">
+    <div class="dc-net-filter">
+      <input class="dc-filter-input" id="net-filter" placeholder="Filter by URL or method…">
+      <button class="dc-clear-btn" id="net-clear">Clear</button>
+    </div>
+    <div class="dc-scroll" id="network-output"></div>
+  </div>
+
+  <!-- ── STORAGE ── -->
+
+  <div class="dc-panel" id="panel-storage">
+    <div class="dc-storage-nav">
+      <button class="dc-st-btn active" data-storage="indexeddb">IndexedDB</button>
+      <button class="dc-st-btn" data-storage="localstorage">LocalStorage</button>
+      <button class="dc-st-btn" data-storage="sessionstorage">SessionStorage</button>
+    </div>
+    <div class="dc-storage-actions">
+      <button class="dc-clear-btn" id="storage-refresh">↺ Refresh</button>
+    </div>
+    <div class="dc-scroll" id="storage-output"></div>
+  </div>
+
+  <!-- ── DOM ── -->
+
+  <div class="dc-panel" id="panel-dom">
+    <div class="dc-dom-toolbar">
+      <button class="dc-dom-btn" id="dom-refresh-btn">↺ Refresh tree</button>
+      <button class="dc-dom-btn" id="dom-pick-btn">⊕ Pick element</button>
+      <button class="dc-dom-btn" id="dom-collapse-btn">Collapse all</button>
+    </div>
+    <div class="dc-scroll" id="dom-output"></div>
+  </div>
+
+  <!-- ── SYSTEM ── -->
+
+  <div class="dc-panel" id="panel-system">
+    <div class="dc-scroll">
+      <div class="dc-sys-grid" id="system-output"></div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+
+  <div class="dc-panel" id="panel-settings">
+    <div class="dc-scroll dc-settings-body" id="settings-output"></div>
+  </div>
+</div>
 
   <script>
     let editor, currentFile = null;
