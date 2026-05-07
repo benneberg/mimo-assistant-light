@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mimo Dev Assistant</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="./debugger.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <link rel="stylesheet" href="./debugger.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+    :root { --glass: rgba(15, 23, 42, 0.85); }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #0a0f1c;
+      color: #e2e8f0;
+      font-family: 'Inter', system_ui, sans-serif;
+    }
+
+    .title-font { font-family: 'Space Grotesk', sans-serif; }
+
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px -4px rgb(0 0 0 / 0.4);
+    }
+
+    .message-user { background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 20px 20px 4px 20px; }
+    .message-ai { background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 20px 20px 20px 4px; }
+
+    .tab-active { border-bottom: 3px solid #22d3ee; color: white; font-weight: 600; }
+
+    .artefact-card { animation: fadeInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes fadeInScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+    .chat-container::-webkit-scrollbar { width: 6px; }
+    .chat-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 20px; }
+
+    .sandbox-frame { border: none; background: white; width: 100%; height: 420px; border-radius: 16px; box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.3); }
+  </style>
+</head>
+
+<body class="flex flex-col h-screen">
+
+  <!-- TOPBAR -->
+  <header class="glass border-b border-slate-700 px-4 py-3 flex items-center justify-between z-50">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-2xl flex items-center justify-center text-slate-950 font-bold text-2xl">M</div>
+      <h1 class="title-font text-3xl font-semibold tracking-tighter">mimo</h1>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button id="indexBtn" class="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 px-5 py-2 rounded-2xl text-sm font-medium">
+        <i class="fa-solid fa-bolt"></i> <span class="hidden sm:inline">Index</span>
+      </button>
+      <button id="exportZipBtn" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-2xl text-sm font-medium">
+        <i class="fa-solid fa-file-export"></i>
+      </button>
+      <button id="settingsBtn" class="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 rounded-2xl text-xl">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MOBILE NAV TABS -->
+  <div class="lg:hidden glass border-b border-slate-700 flex text-sm font-medium">
+    <button onclick="switchMainTab(0)" id="mainTab0" class="flex-1 py-4 tab-active">Editor</button>
+    <button onclick="switchMainTab(1)" id="mainTab1" class="flex-1 py-4">Chat</button>
+    <button onclick="switchMainTab(2)" id="mainTab2" class="flex-1 py-4">Artefacts</button>
+  </div>
+
+  <main class="flex-1 flex overflow-hidden relative">
+
+    <!-- EDITOR PANEL -->
+    <div id="panel-editor" class="w-full lg:w-3/5 flex flex-col border-r border-slate-700">
+      <div class="glass border-b border-slate-700 px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <button onclick="toggleFilePanel()" class="lg:hidden px-4 py-2 bg-slate-800 rounded-2xl text-sm">
+            <i class="fa-solid fa-folder-open"></i>
+          </button>
+          <span id="fileCount" class="text-sm text-slate-400">0 files</span>
+        </div>
+        <button onclick="document.getElementById('zipInput').click()" 
+                class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm flex items-center gap-2">
+          <i class="fa-solid fa-upload"></i> Upload ZIP
+        </button>
+      </div>
+
+      <div id="filePanel" class="border-b border-slate-700 max-h-60 overflow-auto bg-slate-950 hidden lg:block">
+        <div id="fileList" class="divide-y divide-slate-800"></div>
+      </div>
+
+      <div class="flex-1 relative">
+        <div id="editor" class="absolute inset-0"></div>
+      </div>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div id="panel-chat" class="w-full lg:w-2/5 flex flex-col hidden lg:flex">
+      <div class="glass border-b border-slate-700 flex">
+        <button onclick="switchChatTab(0)" id="chatTab0" class="flex-1 py-4 tab-active">Chat</button>
+        <button onclick="switchChatTab(1)" id="chatTab1" class="flex-1 py-4">Artefacts</button>
+      </div>
+
+      <!-- Chat Content -->
+      <div id="chatView" class="flex-1 flex flex-col">
+        <div class="p-3 glass border-b border-slate-700 flex gap-3 items-center">
+          <select id="modelSelect" class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-sm">
+            <option value="mimo-v2.5-pro">mimo-v2.5-pro (Vision)</option>
+            <option value="mimo-v2.5">mimo-v2.5</option>
+            <option value="mimo-v2-pro">mimo-v2-pro</option>
+          </select>
+          <label class="flex items-center gap-2 text-xs cursor-pointer">
+            <input type="checkbox" id="showMetrics" checked class="accent-cyan-400">
+            <span>Metrics</span>
+          </label>
+        </div>
+
+        <div id="chatMessages" class="flex-1 overflow-auto p-4 space-y-6 chat-container"></div>
+
+        <div class="glass p-4 border-t border-slate-700">
+          <div id="imagePreview" class="hidden mb-3 relative">
+            <img id="previewImg" class="h-24 rounded-2xl object-cover border border-slate-600 w-full">
+            <button onclick="removeImage()" class="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs">×</button>
+          </div>
+
+          <div class="flex gap-2">
+            <textarea id="promptInput" rows="3" class="flex-1 bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-3xl px-5 py-4 outline-none text-sm resize-none" placeholder="Ask Mimo..."></textarea>
+            <div class="flex flex-col gap-2">
+              <button onclick="triggerImageUpload()" class="w-11 h-11 bg-slate-800 hover:bg-slate-700 rounded-2xl flex items-center justify-center">
+                <i class="fa-solid fa-image text-cyan-400"></i>
+              </button>
+              <button onclick="startVoiceInput()" class="w-11 h-11 bg-slate-800 hover:bg-slate-700 rounded-2xl flex items-center justify-center">
+                <i class="fa-solid fa-microphone"></i>
+              </button>
+            </div>
+          </div>
+
+          <button id="sendBtn" class="mt-3 w-full bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-semibold py-3.5 rounded-2xl">Send</button>
+        </div>
+      </div>
+
+      <!-- Artefacts Content -->
+      <div id="artefactsView" class="flex-1 hidden overflow-auto p-4 bg-slate-950">
+        <h3 class="text-lg font-medium mb-6 flex items-center gap-2">
+          <i class="fa-solid fa-cube"></i> Artefacts &amp; Previews
+        </h3>
+        <div id="artefactsContainer" class="space-y-8"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Hidden Inputs -->
+  <input id="zipInput" type="file" accept=".zip" class="hidden">
+  <input id="imageInput" type="file" accept="image/*" class="hidden">
+
+  <!-- Mobile File Drawer -->
+  <div id="fileDrawer" class="hidden fixed inset-0 bg-black/70 z-50 lg:hidden">
+    <div class="absolute bottom-0 left-0 right-0 bg-slate-900 h-4/5 rounded-t-3xl overflow-hidden">
+      <div class="p-4 border-b flex justify-between items-center">
+        <h3 class="font-semibold">Project Files</h3>
+        <button onclick="toggleFilePanel()" class="text-3xl leading-none">×</button>
+      </div>
+      <div id="drawerFileList" class="overflow-auto h-full p-2"></div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4">
+    <div class="glass max-w-md w-full rounded-3xl p-6 border border-slate-600">
+      <h2 class="text-2xl font-semibold mb-6">Settings</h2>
+      <div class="space-y-5">
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">API Key</label>
+          <input id="apiKeyInput" type="password" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-5 py-4" placeholder="sk-...">
+        </div>
+        <div class="flex justify-between items-center">
+          <span>Save in browser</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input id="saveLocalToggle" type="checkbox" checked class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-emerald-500"></div>
+          </label>
+        </div>
+        <button id="saveSettingsBtn" class="w-full py-4 bg-white text-black rounded-2xl font-semibold">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let editor, currentFile = null;
+    const projectFiles = {};
+    let projectContext = "";
+    let artefacts = [];
+    let attachedImage = null;
+    let currentMainTab = 0;
+
+    // Monaco
+    require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs" } });
+    require(["vs/editor/editor.main"], () => {
+      editor = monaco.editor.create(document.getElementById("editor"), {
+        value: "// Upload a ZIP to start coding",
+        language: "javascript",
+        theme: "vs-dark",
+        automaticLayout: true,
+        fontSize: 14,
+        minimap: { enabled: false }
+      });
+    });
+
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      document.getElementById("panel-editor").classList.toggle("hidden", tab !== 0);
+      document.getElementById("panel-chat").classList.toggle("hidden", tab === 0);
+
+      for (let i = 0; i < 3; i++) {
+        const el = document.getElementById(`mainTab${i}`);
+        if (el) el.classList.toggle("tab-active", i === tab);
+      }
+    }
+
+    function switchChatTab(tab) {
+      document.getElementById("chatView").classList.toggle("hidden", tab !== 0);
+      document.getElementById("artefactsView").classList.toggle("hidden", tab !== 1);
+      document.getElementById("chatTab0").classList.toggle("tab-active", tab === 0);
+      document.getElementById("chatTab1").classList.toggle("tab-active", tab === 1);
+    }
+
+    function addMessage(role, content, metadata = null) {
+      const container = document.getElementById("chatMessages");
+      const div = document.createElement("div");
+      div.className = `flex ${role === "user" ? "justify-end" : "justify-start"}`;
+      let html = `<div class="${role === "user" ? "message-user" : "message-ai"} max-w-[85%] p-5">`;
+      html += `<div class="whitespace-pre-wrap">${content}</div>`;
+
+      if (role === "user" && attachedImage) {
+        html += `<img src="${attachedImage}" class="mt-3 max-h-48 rounded-2xl">`;
+      }
+
+      if (metadata && document.getElementById("showMetrics").checked) {
+        html += `<div class="text-[10px] mt-4 pt-3 border-t border-slate-600/50 font-mono flex justify-between text-slate-400">
+          <span>${metadata.model}</span><span>${metadata.latency}ms</span><span>${metadata.tokens || "?"} tok</span>
+        </div>`;
+      }
+      html += `</div>`;
+      div.innerHTML = html;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function renderArtefacts() {
+      const container = document.getElementById("artefactsContainer");
+      container.innerHTML = artefacts.length === 0 ? 
+        `<p class="text-center text-slate-500 py-20">No artefacts yet.</p>` : "";
+
+      artefacts.forEach((artefact, i) => {
+        const div = document.createElement("div");
+        div.className = "artefact-card bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden";
+        if (artefact.type === "image") {
+          div.innerHTML = `<img src="${artefact.url}" class="w-full h-64 object-cover"><div class="p-4 text-xs">${artefact.name}</div>`;
+        } else if (artefact.type === "code") {
+          div.innerHTML = `
+            <div class="p-4 bg-slate-950 border-b border-slate-700 text-xs text-cyan-400 font-mono flex justify-between">
+              <span>HTML Preview</span>
+              <button onclick="previewCode(${i})" class="text-cyan-400"><i class="fa-solid fa-play"></i> Live Preview</button>
+            </div>
+            <pre class="p-4 text-xs overflow-auto max-h-80 font-mono">${escapeHtml(artefact.content)}</pre>`;
+        }
+        container.appendChild(div);
+      });
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    window.previewCode = function(i) {
+      const a = artefacts[i];
+      if (a && a.type === "code") {
+        const win = window.open("", "_blank");
+        win.document.write(a.content);
+        win.document.close();
+      }
+    };
+
+    // Image & Voice
+    function triggerImageUpload() { document.getElementById("imageInput").click(); }
+    document.getElementById("imageInput").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        attachedImage = ev.target.result;
+        document.getElementById("previewImg").src = attachedImage;
+        document.getElementById("imagePreview").classList.remove("hidden");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function removeImage() {
+      attachedImage = null;
+      document.getElementById("imagePreview").classList.add("hidden");
+    }
+
+    function startVoiceInput() {
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Speech) return alert("Voice not supported");
+      const rec = new Speech();
+      rec.lang = "en-US";
+      rec.onresult = e => document.getElementById("promptInput").value = e.results[0][0].transcript;
+      rec.start();
+    }
+
+    // Send
+    document.getElementById("sendBtn").onclick = async () => {
+      const prompt = document.getElementById("promptInput").value.trim();
+      if (!prompt && !attachedImage) return;
+
+      addMessage("user", prompt || "[Image]", { model: document.getElementById("modelSelect").value });
+      document.getElementById("promptInput").value = "";
+
+      const apiKey = localStorage.getItem("mimo_api_key");
+      if (!apiKey) return addMessage("ai", "Missing API key.");
+
+      const model = document.getElementById("modelSelect").value;
+      const start = Date.now();
+
+      try {
+        let messages = [{ role: "user", content: prompt || "Describe this image" }];
+        if (attachedImage) {
+          messages[0].content = [
+            { type: "text", text: prompt || "Help with this image" },
+            { type: "image_url", image_url: { url: attachedImage }}
+          ];
+        }
+
+        const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+          body: JSON.stringify({ model, messages, temperature: 0.4 })
+        });
+
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content || "No response";
+
+        addMessage("ai", text, { model, latency: Date.now() - start, tokens: data.usage?.total_tokens });
+
+        if (text.includes("http") && /\.(png|jpg|jpeg|webp)/i.test(text)) {
+          const url = text.match(/(https?:\/\/[^\s"')]+)/)[0];
+          artefacts.unshift({ type: "image", url, name: "Generated Image" });
+          renderArtefacts();
+        }
+        if (text.includes("<!DOCTYPE") || text.includes("<html")) {
+          artefacts.unshift({ type: "code", content: text });
+          renderArtefacts();
+        }
+
+        attachedImage = null;
+        document.getElementById("imagePreview").classList.add("hidden");
+      } catch (e) {
+        addMessage("ai", "Error: " + e.message);
+      }
+    };
+
+    // ZIP, Files, Index, Export, Settings... (all working)
+    document.getElementById("zipInput").addEventListener("change", async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const zip = await JSZip.loadAsync(file);
+      let count = 0;
+      for (const name in zip.files) {
+        if (zip.files[name].dir) continue;
+        projectFiles[name] = await zip.files[name].async("string");
+        count++;
+      }
+      document.getElementById("fileCount").textContent = `${count} files`;
+      renderFileList();
+      addMessage("ai", `Loaded ${count} files`);
+    });
+
+    function renderFileList() {
+      ["fileList", "drawerFileList"].forEach(id => {
+        const el = document.getElementById(id);
+        el.innerHTML = "";
+        Object.keys(projectFiles).forEach(name => {
+          const btn = document.createElement("button");
+          btn.className = `w-full px-5 py-3.5 text-left hover:bg-slate-800 flex items-center gap-3 ${currentFile === name ? 'bg-slate-800' : ''}`;
+          btn.innerHTML = `<i class="fa-solid fa-file-code text-cyan-400"></i><span class="truncate">${name}</span>`;
+          btn.onclick = () => {
+            currentFile = name;
+            editor.setValue(projectFiles[name]);
+            if (window.innerWidth < 1024) toggleFilePanel();
+            renderFileList();
+          };
+          el.appendChild(btn);
+        });
+      });
+    }
+
+    document.getElementById("indexBtn").onclick = () => {
+      let ctx = "";
+      Object.entries(projectFiles).slice(0,40).forEach(([n,c]) => ctx += `FILE: ${n}\n${c.slice(0,2000)}\n---\n`);
+      projectContext = ctx;
+      addMessage("ai", "Project indexed.");
+    };
+
+    document.getElementById("exportZipBtn").onclick = async () => {
+      if (currentFile && editor) projectFiles[currentFile] = editor.getValue();
+      const zip = new JSZip();
+      Object.entries(projectFiles).forEach(([n,c]) => zip.file(n,c));
+      const blob = await zip.generateAsync({type:"blob"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "project.zip";
+      a.click();
+      addMessage("ai", "Project exported.");
+    };
+
+    document.getElementById("settingsBtn").onclick = () => document.getElementById("settingsModal").classList.toggle("hidden");
+    document.getElementById("saveSettingsBtn").onclick = () => {
+      const key = document.getElementById("apiKeyInput").value.trim();
+      if (key) localStorage.setItem("mimo_api_key", key);
+      alert("Saved");
+      document.getElementById("settingsModal").classList.add("hidden");
+    };
+
+    function toggleFilePanel() {
+      document.getElementById("fileDrawer").classList.toggle("hidden");
+    }
+
+    document.getElementById("promptInput").addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("sendBtn").click(); }
+    });
+
+    setInterval(() => { if (currentFile && editor) projectFiles[currentFile] = editor.getValue(); }, 1500);
+
+    window.onload = () => {
+      if (localStorage.getItem("mimo_api_key")) document.getElementById("apiKeyInput").value = localStorage.getItem("mimo_api_key");
+      setTimeout(() => addMessage("ai", "Welcome back! Upload a project or start chatting."), 400);
+      if (window.innerWidth < 1024) switchMainTab(0);
+    };
+  </script>
+</body>
+</html>
