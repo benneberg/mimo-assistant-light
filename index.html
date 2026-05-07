@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Mimo Dev Assistant</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- Monaco Editor -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.min.js"></script>
+
+  <style>
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      background: #0f172a;
+      color: white;
+    }
+
+    .glass {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+    }
+
+    .message-user {
+      background: #2563eb;
+    }
+
+    .message-ai {
+      background: #1e293b;
+    }
+
+    #editor {
+      width: 100%;
+      height: 100%;
+    }
+
+    .scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col h-screen">
+
+  <!-- TOPBAR -->
+  <header
+    class="glass border-b border-slate-800 px-4 py-3 flex items-center justify-between"
+  >
+    <div>
+      <h1 class="text-lg font-bold">Mimo Dev Assistant</h1>
+      <p class="text-xs text-slate-400">
+        BYOK AI Code Assistant
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        id="settingsBtn"
+        class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm"
+      >
+        Settings
+      </button>
+
+      <button
+        id="exportZipBtn"
+        class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm"
+      >
+        Export ZIP
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="flex-1 overflow-hidden flex flex-col lg:flex-row">
+
+    <!-- LEFT -->
+    <section
+      class="w-full lg:w-1/2 border-r border-slate-800 flex flex-col"
+    >
+
+      <!-- FILES -->
+      <div class="border-b border-slate-800 p-3">
+        <div class="flex items-center gap-2">
+          <input
+            id="zipInput"
+            type="file"
+            accept=".zip"
+            class="hidden"
+          />
+
+          <button
+            id="uploadZipBtn"
+            class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm"
+          >
+            Upload ZIP Codebase
+          </button>
+
+          <span
+            id="fileCount"
+            class="text-xs text-slate-400"
+          >
+            No files loaded
+          </span>
+        </div>
+      </div>
+
+      <!-- FILE LIST -->
+      <div
+        id="fileList"
+        class="h-48 overflow-auto scrollbar border-b border-slate-800"
+      ></div>
+
+      <!-- EDITOR -->
+      <div class="flex-1">
+        <div id="editor"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <section class="w-full lg:w-1/2 flex flex-col">
+
+      <!-- MODEL BAR -->
+      <div
+        class="border-b border-slate-800 p-3 flex items-center gap-2"
+      >
+        <select
+          id="modelSelect"
+          class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm flex-1"
+        >
+          <option value="mimo-2.5-pro">
+            mimo-2.5-pro
+          </option>
+
+          <option value="mimo-2.5-lite">
+            mimo-2.5-lite
+          </option>
+
+          <option value="mimo-coder">
+            mimo-coder
+          </option>
+        </select>
+
+        <button
+          id="scanProjectBtn"
+          class="bg-purple-600 hover:bg-purple-500 px-3 py-2 rounded-xl text-sm"
+        >
+          Index Project
+        </button>
+      </div>
+
+      <!-- CHAT -->
+      <div
+        id="chatMessages"
+        class="flex-1 overflow-auto p-4 space-y-4 scrollbar"
+      ></div>
+
+      <!-- INPUT -->
+      <div class="border-t border-slate-800 p-3">
+        <div class="flex gap-2">
+          <textarea
+            id="promptInput"
+            rows="3"
+            placeholder="Ask Mimo to explain, refactor, fix bugs, create files..."
+            class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 resize-none outline-none"
+          ></textarea>
+
+          <button
+            id="sendBtn"
+            class="bg-blue-600 hover:bg-blue-500 rounded-2xl px-5"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SETTINGS MODAL -->
+  <div
+    id="settingsModal"
+    class="hidden fixed inset-0 bg-black/60 z-50 items-center justify-center p-4"
+  >
+    <div
+      class="w-full max-w-md bg-slate-900 rounded-2xl border border-slate-700 p-5"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold text-lg">Settings</h2>
+
+        <button
+          id="closeSettingsBtn"
+          class="text-slate-400"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-4">
+
+        <div>
+          <label class="block mb-2 text-sm text-slate-300">
+            Xiaomi Mimo API Key (BYOK)
+          </label>
+
+          <input
+            id="apiKeyInput"
+            type="password"
+            placeholder="Paste API key"
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+          />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-sm">
+            Save in localStorage
+          </span>
+
+          <input
+            id="saveLocalToggle"
+            type="checkbox"
+            class="w-5 h-5"
+            checked
+          />
+        </div>
+
+        <button
+          id="saveSettingsBtn"
+          class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-semibold"
+        >
+          Save Settings
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // STATE
+    // ============================================
+
+    let editor;
+    let currentFile = null;
+
+    const projectFiles = {};
+    let projectContext = "";
+
+    // ============================================
+    // MONACO
+    // ============================================
+
+    require.config({
+      paths: {
+        vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs"
+      }
+    });
+
+    require(["vs/editor/editor.main"], function () {
+      editor = monaco.editor.create(
+        document.getElementById("editor"),
+        {
+          value: "// Upload a project ZIP",
+          language: "javascript",
+          theme: "vs-dark",
+          automaticLayout: true,
+          minimap: {
+            enabled: false
+          }
+        }
+      );
+    });
+
+    // ============================================
+    // SETTINGS
+    // ============================================
+
+    const settingsModal =
+      document.getElementById("settingsModal");
+
+    document
+      .getElementById("settingsBtn")
+      .onclick = () => {
+        settingsModal.classList.remove("hidden");
+        settingsModal.classList.add("flex");
+      };
+
+    document
+      .getElementById("closeSettingsBtn")
+      .onclick = closeSettings;
+
+    function closeSettings() {
+      settingsModal.classList.add("hidden");
+      settingsModal.classList.remove("flex");
+    }
+
+    const savedKey =
+      localStorage.getItem("mimo_api_key");
+
+    if (savedKey) {
+      document.getElementById("apiKeyInput").value =
+        savedKey;
+    }
+
+    document
+      .getElementById("saveSettingsBtn")
+      .onclick = () => {
+        const key =
+          document.getElementById("apiKeyInput").value;
+
+        const shouldSave =
+          document.getElementById(
+            "saveLocalToggle"
+          ).checked;
+
+        if (shouldSave) {
+          localStorage.setItem(
+            "mimo_api_key",
+            key
+          );
+        }
+
+        alert("Saved");
+        closeSettings();
+      };
+
+    // ============================================
+    // CHAT UI
+    // ============================================
+
+    function addMessage(role, content) {
+      const container =
+        document.getElementById("chatMessages");
+
+      const div = document.createElement("div");
+
+      div.className =
+        "rounded-2xl p-4 text-sm whitespace-pre-wrap " +
+        (role === "user"
+          ? "message-user ml-10"
+          : "message-ai mr-10");
+
+      div.textContent = content;
+
+      container.appendChild(div);
+
+      container.scrollTop =
+        container.scrollHeight;
+    }
+
+    // ============================================
+    // ZIP IMPORT
+    // ============================================
+
+    document
+      .getElementById("uploadZipBtn")
+      .onclick = () => {
+        document
+          .getElementById("zipInput")
+          .click();
+      };
+
+    document
+      .getElementById("zipInput")
+      .addEventListener(
+        "change",
+        async (e) => {
+          const file = e.target.files[0];
+
+          if (!file) return;
+
+          const zip = await JSZip.loadAsync(file);
+
+          const fileList =
+            document.getElementById("fileList");
+
+          fileList.innerHTML = "";
+
+          let count = 0;
+
+          for (const filename in zip.files) {
+            const zipEntry = zip.files[filename];
+
+            if (zipEntry.dir) continue;
+
+            const content =
+              await zipEntry.async("string");
+
+            projectFiles[filename] = content;
+
+            count++;
+
+            const item =
+              document.createElement("button");
+
+            item.className =
+              "w-full text-left px-3 py-2 border-b border-slate-800 hover:bg-slate-800 text-sm";
+
+            item.textContent = filename;
+
+            item.onclick = () => {
+              currentFile = filename;
+
+              editor.setValue(
+                projectFiles[filename]
+              );
+            };
+
+            fileList.appendChild(item);
+          }
+
+          document.getElementById(
+            "fileCount"
+          ).textContent =
+            count + " files loaded";
+
+          addMessage(
+            "ai",
+            `Loaded ${count} files from ZIP.`
+          );
+        }
+      );
+
+    // ============================================
+    // PROJECT INDEXING
+    // ============================================
+
+    document
+      .getElementById("scanProjectBtn")
+      .onclick = () => {
+
+        let context = "";
+
+        Object.entries(projectFiles)
+          .slice(0, 50)
+          .forEach(([name, content]) => {
+
+            context += `
+FILE: ${name}
+
+${content.slice(0, 5000)}
+
+====================================
+`;
+          });
+
+        projectContext = context;
+
+        addMessage(
+          "ai",
+          "Project indexed and added to AI context."
+        );
+      };
+
+    // ============================================
+    // SEND MESSAGE
+    // ============================================
+
+    document
+      .getElementById("sendBtn")
+      .onclick = sendMessage;
+
+    async function sendMessage() {
+
+      const promptInput =
+        document.getElementById("promptInput");
+
+      const prompt = promptInput.value.trim();
+
+      if (!prompt) return;
+
+      addMessage("user", prompt);
+
+      promptInput.value = "";
+
+      const apiKey =
+        localStorage.getItem("mimo_api_key");
+
+      if (!apiKey) {
+        addMessage(
+          "ai",
+          "Missing API key. Open settings."
+        );
+        return;
+      }
+
+      const model =
+        document.getElementById("modelSelect")
+          .value;
+
+      try {
+
+        const systemPrompt = `
+You are an advanced software engineering AI.
+
+You help with:
+- understanding code
+- debugging
+- refactoring
+- generating files
+- architecture
+- improving UX/UI
+- explaining code
+
+If user asks for code changes:
+1. Explain changes
+2. Return full updated code
+3. Be precise
+`;
+
+        const response = await fetch(
+          "https://api.mimo.ai/v1/chat/completions",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                "Bearer " + apiKey
+            },
+
+            body: JSON.stringify({
+              model,
+
+              messages: [
+                {
+                  role: "system",
+                  content: systemPrompt
+                },
+
+                {
+                  role: "user",
+                  content:
+                    `
+PROJECT CONTEXT:
+${projectContext}
+
+CURRENT FILE:
+${currentFile || "none"}
+
+CURRENT FILE CONTENT:
+${
+  currentFile
+    ? projectFiles[currentFile]
+    : ""
+}
+
+USER REQUEST:
+${prompt}
+`
+                }
+              ],
+
+              temperature: 0.3,
+              stream: false
+            })
+          }
+        );
+
+        const data =
+          await response.json();
+
+        console.log(data);
+
+        const text =
+          data?.choices?.[0]?.message?.content ||
+          JSON.stringify(data, null, 2);
+
+        addMessage("ai", text);
+
+      } catch (err) {
+
+        console.error(err);
+
+        addMessage(
+          "ai",
+          "API Error: " + err.message
+        );
+      }
+    }
+
+    // ============================================
+    // EXPORT ZIP
+    // ============================================
+
+    document
+      .getElementById("exportZipBtn")
+      .onclick = async () => {
+
+        if (currentFile) {
+          projectFiles[currentFile] =
+            editor.getValue();
+        }
+
+        const zip = new JSZip();
+
+        Object.entries(projectFiles)
+          .forEach(([name, content]) => {
+            zip.file(name, content);
+          });
+
+        const blob =
+          await zip.generateAsync({
+            type: "blob"
+          });
+
+        const url =
+          URL.createObjectURL(blob);
+
+        const a =
+          document.createElement("a");
+
+        a.href = url;
+        a.download = "project-export.zip";
+
+        a.click();
+
+        URL.revokeObjectURL(url);
+
+        addMessage(
+          "ai",
+          "Project exported as ZIP."
+        );
+      };
+
+    // ============================================
+    // AUTO SAVE EDITOR
+    // ============================================
+
+    setInterval(() => {
+
+      if (!currentFile || !editor) return;
+
+      projectFiles[currentFile] =
+        editor.getValue();
+
+    }, 1000);
+
+  </script>
+</body>
+</html>
