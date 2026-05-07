@@ -11,7 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-  <link rel="stylesheet" href="./debugger.css" />
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
 
@@ -81,47 +81,7 @@
       40% { transform: scale(1); }
     }
 
-    /* Debugger Styles (Basic fallback if CSS file missing) */
-    #dc-fab {
-      position: fixed; bottom: 80px; right: 20px;
-      width: 56px; height: 56px; border-radius: 50%;
-      background: linear-gradient(135deg, #8b5cf6, #6366f1);
-      color: white; border: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 999; display: flex; align-items: center; justify-content: center;
-      font-size: 24px; cursor: pointer; transition: transform 0.2s;
-    }
-    #dc-fab:active { transform: scale(0.95); }
-    
-    .dc-fab-badge {
-      position: absolute; top: -4px; right: -4px;
-      background: #ef4444; color: white;
-      font-size: 10px; width: 18px; height: 18px;
-      border-radius: 50%; display: none; align-items: center; justify-content: center;
-    }
-
-    #dc-panel {
-      position: fixed; left: 0; right: 0; bottom: 0;
-      height: 50vh; max-height: 60vh; 
-      background: #0f172a; border-top: 1px solid #334155;
-      border-radius: 16px 16px 0 0;
-      display: none; flex-direction: column; z-index: 1000;
-      transform: translateY(100%); transition: transform 0.3s ease-out;
-      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-    }
-    #dc-panel.visible { transform: translateY(0); }
-    
-    /* Required classes for debugger.js to function without external CSS */
-    .dc-panel { display: none; flex-direction: column; height: 100%; }
-    .dc-panel.active { display: flex; }
-    .dc-scroll { overflow-y: auto; flex: 1; padding: 8px; font-family: monospace; font-size: 12px; }
-    .dc-tab { padding: 8px 16px; background: transparent; border: none; color: #94a3b8; cursor: pointer; border-bottom: 2px solid transparent; }
-    .dc-tab.active { color: #22d3ee; border-bottom-color: #22d3ee; }
-    .dc-header { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #334155; align-items: center; }
-    .dc-hbtn { background: #1e293b; border: none; color: #94a3b8; padding: 4px 8px; border-radius: 6px; cursor: pointer; margin-left: 4px; }
-    .dc-drag { height: 6px; background: #334155; width: 40px; border-radius: 3px; margin: 6px auto; cursor: ns-resize; }
-
-    /* Preview Modal */
+     /* Preview Modal */
     #previewModal {
       position: fixed; inset: 0; z-index: 2000;
       background: rgba(0,0,0,0.9);
@@ -295,75 +255,7 @@
     <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals"></iframe>
   </div>
 
-  <!-- ══ DEBUGGER HTML STRUCTURE (Required for debugger.js) ══ -->
   
-  <button id="dc-fab" title="DevConsole">
-    <span id="dc-fab-icon">⌥</span>
-    <span class="dc-fab-badge" id="dc-error-badge">0</span>
-  </button>
-
-  <div id="dc-panel">
-    <div id="dc-drag" class="dc-drag"></div>
-    <div id="dc-header" class="dc-header">
-      <span id="dc-title">DevConsole</span>
-      <div>
-        <button class="dc-hbtn" id="dc-clear-btn" title="Clear active tab">🗑</button>
-        <button class="dc-hbtn" id="dc-copy-btn" title="Copy logs">📋</button>
-        <button class="dc-hbtn" id="dc-minimize-btn" title="Minimize">−</button>
-      </div>
-    </div>
-    <div id="dc-tabs" style="display:flex; border-bottom:1px solid #334155; background:#0f172a;">
-      <button class="dc-tab active" data-tab="console">Console<span class="dc-tab-count" id="cnt-console"></span></button>
-      <button class="dc-tab" data-tab="network">Network<span class="dc-tab-count" id="cnt-network"></span></button>
-      <button class="dc-tab" data-tab="storage">Storage</button>
-      <button class="dc-tab" data-tab="dom">DOM</button>
-      <button class="dc-tab" data-tab="system">System</button>
-      <button class="dc-tab" data-tab="settings">⚙</button>
-    </div>
-
-    <div class="dc-panel active" id="panel-console">
-      <div class="dc-scroll" id="console-output"></div>
-      <div style="padding:8px; border-top:1px solid #334155; display:flex; gap:4px;">
-        <input class="dc-input" id="repl-input" placeholder="▶ execute javascript…" style="flex:1; background:#1e293b; border:none; padding:8px; border-radius:6px; color:white; font-family:monospace;">
-        <button class="dc-hbtn" id="repl-run">RUN</button>
-      </div>
-    </div>
-
-    <div class="dc-panel" id="panel-network">
-      <div style="padding:8px; display:flex; gap:4px;">
-        <input class="dc-filter-input" id="net-filter" placeholder="Filter..." style="flex:1; background:#1e293b; border:none; padding:8px; border-radius:6px; color:white;">
-        <button class="dc-hbtn" id="net-clear">Clear</button>
-      </div>
-      <div class="dc-scroll" id="network-output"></div>
-    </div>
-
-    <div class="dc-panel" id="panel-storage">
-      <div style="padding:8px; border-bottom:1px solid #334155; display:flex; gap:4px;">
-         <button class="dc-tab active" data-storage="indexeddb" style="font-size:10px; padding:4px 8px;">IndexedDB</button>
-         <button class="dc-tab" data-storage="localstorage" style="font-size:10px; padding:4px 8px;">Local</button>
-         <button class="dc-tab" data-storage="sessionstorage" style="font-size:10px; padding:4px 8px;">Session</button>
-      </div>
-      <div class="dc-scroll" id="storage-output"></div>
-    </div>
-
-    <div class="dc-panel" id="panel-dom">
-      <div style="padding:8px; display:flex; gap:4px;">
-        <button class="dc-hbtn" id="dom-refresh-btn">↺</button>
-        <button class="dc-hbtn" id="dom-pick-btn">⊕ Pick</button>
-        <button class="dc-hbtn" id="dom-collapse-btn">Collapse</button>
-      </div>
-      <div class="dc-scroll" id="dom-output"></div>
-    </div>
-
-    <div class="dc-panel" id="panel-system">
-      <div class="dc-scroll" id="system-output"></div>
-    </div>
-
-    <div class="dc-panel" id="panel-settings">
-      <div class="dc-scroll" id="settings-output"></div>
-    </div>
-  </div>
-
   <!-- SCRIPTS -->
   <script>
     let editor, currentFile = null;
