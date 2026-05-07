@@ -1,8 +1,813 @@
-// debugger.js
 (function() {
   'use strict';
 
-  // ══ STATE ══════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
+  // 1. INJECT CSS (Scoped to #dc-panel and #dc-fab)
+  // ═══════════════════════════════════════════════════════════════
+  const css = `
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+    :root {
+      --dc-bg0: #0d0d0f;
+      --dc-bg1: #141418;
+      --dc-bg2: #1c1c22;
+      --dc-bg3: #242430;
+      --dc-border: #2a2a38;
+      --dc-accent: #7c6af7;
+      --dc-accent2: #f768a4;
+      --dc-green: #3dffa0;
+      --dc-orange: #ffb347;
+      --dc-red: #ff5c6e;
+      --dc-blue: #5bcefa;
+      --dc-text0: #f0f0f8;
+      --dc-text1: #a8a8c0;
+      --dc-text2: #606078;
+      --dc-mono: 'JetBrains Mono', monospace;
+      --dc-sans: 'Syne', sans-serif;
+    }
+
+    /* Scope resets strictly to our elements */
+    #dc-panel, #dc-fab { box-sizing: border-box; }
+    #dc-panel *, #dc-fab * { box-sizing: inherit; }
+
+    /* ── FAB ────────────────────────────── */
+    #dc-fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--dc-accent);
+      color: #fff;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px rgba(124,106,247,0.5);
+      transition: all 0.2s ease;
+      font-family: var(--dc-mono);
+      padding: 0;
+      margin: 0;
+    }
+
+    #dc-fab:hover { transform: scale(1.05); box-shadow: 0 6px 30px rgba(124,106,247,0.7); }
+    #dc-fab:active { transform: scale(0.95); }
+
+    .dc-fab-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      min-width: 18px;
+      height: 18px;
+      background: var(--dc-red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 9px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      font-family: var(--dc-mono);
+    }
+
+    /* ── CONSOLE PANEL ───────────────────── */
+    #dc-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 320px;
+      min-height: 120px;
+      max-height: 85vh;
+      background: var(--dc-bg1);
+      border-top: 1px solid var(--dc-border);
+      border-radius: 14px 14px 0 0;
+      box-shadow: 0 -12px 50px rgba(0,0,0,0.6);
+      display: none;
+      flex-direction: column;
+      z-index: 99998;
+      overflow: hidden;
+      font-family: var(--dc-mono);
+      color: var(--dc-text0);
+    }
+
+    #dc-panel.visible {
+      display: flex;
+      animation: dcSlideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes dcSlideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+
+    /* Drag handle */
+    #dc-drag {
+      width: 100%;
+      height: 22px;
+      background: var(--dc-bg2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: ns-resize;
+      border-radius: 14px 14px 0 0;
+      flex-shrink: 0;
+      touch-action: none;
+      user-select: none;
+    }
+
+    #dc-drag::before {
+      content: '';
+      width: 36px;
+      height: 4px;
+      background: var(--dc-border);
+      border-radius: 2px;
+      transition: background 0.2s;
+    }
+
+    #dc-drag:hover::before { background: var(--dc-accent); }
+
+    /* Header bar */
+    #dc-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--dc-bg2);
+      border-bottom: 1px solid var(--dc-border);
+      flex-shrink: 0;
+    }
+
+    #dc-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--dc-accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    .dc-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--dc-green);
+      animation: dcPulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes dcPulse {
+      0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(61,255,160,0.4); }
+      50%      { opacity: 0.6; box-shadow: 0 0 0 5px rgba(61,255,160,0); }
+    }
+
+    .dc-hbtn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 7px;
+      background: var(--dc-bg3);
+      color: var(--dc-text1);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      padding: 0;
+    }
+
+    .dc-hbtn:hover { background: var(--dc-border); color: var(--dc-text0); }
+
+    /* Tabs */
+    #dc-tabs {
+      display: flex;
+      background: var(--dc-bg0);
+      border-bottom: 1px solid var(--dc-border);
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+    }
+
+    #dc-tabs::-webkit-scrollbar { display: none; }
+
+    .dc-tab {
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      color: var(--dc-text2);
+      font-family: var(--dc-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .dc-tab:hover { color: var(--dc-text1); }
+
+    .dc-tab.active {
+      color: var(--dc-accent);
+      border-bottom-color: var(--dc-accent);
+    }
+
+    .dc-tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 16px;
+      height: 16px;
+      background: var(--dc-accent);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      border-radius: 8px;
+      padding: 0 4px;
+      margin-left: 5px;
+    }
+
+    /* Tab panels */
+    .dc-panel-content {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .dc-panel-content.active { display: flex; }
+
+    .dc-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--dc-border) transparent;
+    }
+
+    .dc-scroll::-webkit-scrollbar { width: 4px; }
+    .dc-scroll::-webkit-scrollbar-thumb { background: var(--dc-border); border-radius: 2px; }
+
+    /* ── LOG ENTRIES ──────────────────────── */
+    .dc-entry {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 5px 8px;
+      border-radius: 5px;
+      margin-bottom: 3px;
+      font-size: 12px;
+      line-height: 1.5;
+      word-break: break-word;
+      animation: dcFadeIn 0.1s ease;
+    }
+
+    @keyframes dcFadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+
+    .dc-entry-log  { color: var(--dc-text0); }
+    .dc-entry-warn { color: var(--dc-orange); background: rgba(255,179,71,0.07); border-left: 2px solid var(--dc-orange); }
+    .dc-entry-error { color: var(--dc-red); background: rgba(255,92,110,0.07); border-left: 2px solid var(--dc-red); }
+    .dc-entry-info { color: var(--dc-blue); background: rgba(91,206,250,0.06); border-left: 2px solid var(--dc-blue); }
+    .dc-entry-cmd  { color: var(--dc-accent); background: rgba(124,106,247,0.06); }
+
+    .dc-ts {
+      color: var(--dc-text2);
+      font-size: 10px;
+      font-weight: 400;
+      flex-shrink: 0;
+      letter-spacing: 0;
+    }
+
+    .dc-entry pre {
+      white-space: pre-wrap;
+      word-break: break-all;
+      background: var(--dc-bg0);
+      padding: 6px 8px;
+      border-radius: 5px;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--dc-green);
+      width: 100%;
+    }
+
+    /* ── REPL INPUT ───────────────────────── */
+    .dc-repl {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--dc-bg2);
+      border-top: 1px solid var(--dc-border);
+      flex-shrink: 0;
+    }
+
+    .dc-input {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--dc-bg0);
+      border: 1px solid var(--dc-border);
+      border-radius: 8px;
+      color: var(--dc-text0);
+      font-family: var(--dc-mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .dc-input:focus { border-color: var(--dc-accent); box-shadow: 0 0 0 2px rgba(124,106,247,0.15); }
+
+    .dc-run-btn {
+      padding: 8px 14px;
+      background: var(--dc-accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: var(--dc-mono);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+
+    .dc-run-btn:hover { background: #8f7ffb; }
+    .dc-run-btn:active { transform: scale(0.96); }
+
+    /* ── NETWORK TAB ──────────────────────── */
+    .dc-net-filter {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--dc-bg2);
+      border-bottom: 1px solid var(--dc-border);
+      flex-shrink: 0;
+    }
+
+    .dc-filter-input {
+      flex: 1;
+      padding: 7px 10px;
+      background: var(--dc-bg0);
+      border: 1px solid var(--dc-border);
+      border-radius: 8px;
+      color: var(--dc-text0);
+      font-family: var(--dc-mono);
+      font-size: 12px;
+      outline: none;
+    }
+
+    .dc-filter-input:focus { border-color: var(--dc-accent); }
+
+    .dc-clear-btn {
+      padding: 7px 12px;
+      background: var(--dc-bg3);
+      border: 1px solid var(--dc-border);
+      border-radius: 8px;
+      color: var(--dc-text1);
+      font-family: var(--dc-mono);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .dc-clear-btn:hover { border-color: var(--dc-red); color: var(--dc-red); }
+
+    .dc-req {
+      padding: 9px 10px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      background: var(--dc-bg2);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+
+    .dc-req:hover { border-color: var(--dc-border); }
+    .dc-req.expanded { border-color: var(--dc-accent); }
+
+    .dc-req-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+    }
+
+    .dc-method {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    .m-GET    { background: rgba(61,255,160,0.15); color: var(--dc-green); }
+    .m-POST   { background: rgba(91,206,250,0.15); color: var(--dc-blue); }
+    .m-PUT    { background: rgba(255,179,71,0.15); color: var(--dc-orange); }
+    .m-DELETE { background: rgba(255,92,110,0.15); color: var(--dc-red); }
+    .m-PATCH  { background: rgba(124,106,247,0.15); color: var(--dc-accent); }
+    .m-UNK    { background: var(--dc-bg3); color: var(--dc-text2); }
+
+    .dc-req-url {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--dc-text0);
+    }
+
+    .dc-req-status { flex-shrink: 0; }
+    .s-ok   { color: var(--dc-green); }
+    .s-redir { color: var(--dc-orange); }
+    .s-err  { color: var(--dc-red); }
+
+    .dc-req-meta {
+      color: var(--dc-text2);
+      font-size: 10px;
+      margin-top: 3px;
+    }
+
+    .dc-req-detail {
+      display: none;
+      margin-top: 8px;
+      background: var(--dc-bg0);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: var(--dc-text1);
+    }
+
+    .dc-req-detail.open { display: block; }
+
+    .dc-detail-section { margin-bottom: 10px; }
+    .dc-detail-title { color: var(--dc-accent); font-weight: 700; margin-bottom: 4px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .dc-detail-row { padding: 2px 0; word-break: break-all; }
+    .dc-detail-key { color: var(--dc-text2); }
+
+    /* ── STORAGE TAB ──────────────────────── */
+    .dc-storage-nav {
+      display: flex;
+      gap: 4px;
+      padding: 8px 12px;
+      background: var(--dc-bg2);
+      border-bottom: 1px solid var(--dc-border);
+      flex-shrink: 0;
+    }
+
+    .dc-st-btn {
+      padding: 5px 12px;
+      border: 1px solid var(--dc-border);
+      border-radius: 100px;
+      background: none;
+      color: var(--dc-text2);
+      font-family: var(--dc-mono);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .dc-st-btn.active { background: var(--dc-accent); border-color: var(--dc-accent); color: #fff; }
+    .dc-st-btn:hover:not(.active) { border-color: var(--dc-text2); color: var(--dc-text1); }
+
+    .dc-storage-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding: 6px 12px;
+      flex-shrink: 0;
+    }
+
+    .dc-db-card {
+      background: var(--dc-bg2);
+      border: 1px solid var(--dc-border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .dc-db-header {
+      padding: 10px 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--dc-bg3);
+      transition: background 0.15s;
+    }
+
+    .dc-db-header:hover { background: var(--dc-border); }
+
+    .dc-db-name { color: var(--dc-blue); font-size: 12px; font-weight: 700; }
+    .dc-db-meta { color: var(--dc-text2); font-size: 10px; margin-top: 2px; }
+
+    .dc-db-body { display: none; padding: 10px; }
+    .dc-db-card.open .dc-db-body { display: block; }
+
+    .dc-store-item {
+      padding: 8px 10px;
+      background: var(--dc-bg0);
+      border-radius: 5px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+
+    .dc-store-item:hover { border-color: var(--dc-border); }
+    .dc-store-name { color: var(--dc-text0); font-size: 12px; font-weight: 600; }
+    .dc-store-meta { color: var(--dc-text2); font-size: 10px; margin-top: 2px; }
+
+    .dc-data-viewer {
+      display: none;
+      margin-top: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .dc-data-viewer.open { display: block; }
+
+    .dc-data-row {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--dc-border);
+      font-size: 11px;
+    }
+
+    .dc-data-key  { color: #ffd700; font-weight: 600; }
+    .dc-data-val  { color: var(--dc-blue); margin-top: 3px; word-break: break-all; }
+
+    .dc-kv-row {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--dc-border);
+      font-size: 11px;
+    }
+
+    .dc-kv-key { color: #ffd700; font-weight: 600; min-width: 100px; word-break: break-all; }
+    .dc-kv-val { color: var(--dc-blue); flex: 1; word-break: break-all; }
+
+    .dc-empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--dc-text2);
+      font-size: 12px;
+    }
+
+    /* ── DOM TAB ──────────────────────────────────── */
+    .dc-dom-toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--dc-bg2);
+      border-bottom: 1px solid var(--dc-border);
+      flex-shrink: 0;
+    }
+
+    .dc-dom-btn {
+      padding: 5px 12px;
+      border: 1px solid var(--dc-border);
+      border-radius: 100px;
+      background: none;
+      color: var(--dc-text2);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .dc-dom-btn:hover { border-color: var(--dc-accent); color: var(--dc-accent); }
+    .dc-dom-btn.picking { background: var(--dc-accent2); border-color: var(--dc-accent2); color: #fff; }
+
+    .dc-tree { font-size: 12px; }
+
+    .dc-node-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: none;
+      transition: background 0.1s;
+    }
+
+    .dc-node-label:hover { background: var(--dc-bg3); }
+
+    .dc-arrow { color: var(--dc-text2); width: 12px; flex-shrink: 0; font-size: 9px; }
+    .dc-tag   { color: var(--dc-accent2); font-weight: 600; }
+    .dc-id    { color: var(--dc-blue); }
+    .dc-cls   { color: var(--dc-orange); }
+    .dc-txt-preview { color: var(--dc-text2); font-size: 10px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+
+    .dc-children { margin-left: 16px; display: none; }
+    .dc-children.open { display: block; }
+
+    .dc-node-detail {
+      background: var(--dc-bg0);
+      border: 1px solid var(--dc-border);
+      border-radius: 6px;
+      padding: 12px;
+      margin: 8px 0;
+      font-size: 11px;
+    }
+
+    .dc-attr-row { padding: 3px 0; }
+    .dc-attr-name { color: var(--dc-blue); }
+    .dc-attr-val  { color: var(--dc-green); }
+
+    /* ── SYSTEM TAB ───────────────────────────────── */
+    .dc-sys-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+
+    .dc-sys-card {
+      background: var(--dc-bg2);
+      border: 1px solid var(--dc-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .dc-sys-label {
+      color: var(--dc-text2);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .dc-sys-val {
+      color: var(--dc-text0);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .dc-sys-full { grid-column: 1 / -1; }
+
+    /* ── SETTINGS TAB ─────────────────────────────── */
+    .dc-settings-body { padding: 10px 12px; }
+
+    .dc-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--dc-border);
+    }
+
+    .dc-setting-row:last-child { border-bottom: none; }
+
+    .dc-setting-info { flex: 1; }
+    .dc-setting-name { color: var(--dc-text0); font-size: 12px; font-weight: 600; }
+    .dc-setting-desc { color: var(--dc-text2); font-size: 10px; margin-top: 2px; }
+
+    .dc-toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .dc-toggle input { opacity: 0; width: 0; height: 0; }
+
+    .dc-toggle-track {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--dc-border);
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .dc-toggle input:checked + .dc-toggle-track { background: var(--dc-accent); }
+
+    .dc-toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+
+    .dc-toggle input:checked + .dc-toggle-track::after { transform: translateX(18px); }
+
+    .dc-select {
+      background: var(--dc-bg0);
+      border: 1px solid var(--dc-border);
+      border-radius: 6px;
+      color: var(--dc-text0);
+      font-size: 12px;
+      padding: 6px 10px;
+      outline: none;
+    }
+
+    /* ── PICK highlight ───────────────────────────── */
+    .dc-pick-highlight {
+      outline: 2px dashed var(--dc-accent2) !important;
+      outline-offset: 2px;
+      background: rgba(247,104,164,0.08) !important;
+    }
+  `;
+
+  const style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+
+  // ═══════════════════════════════════════════════════════════════
+  // 2. INJECT HTML
+  // ═══════════════════════════════════════════════════════════════
+  const html = `
+  <button id="dc-fab" title="DevConsole">
+    <span id="dc-fab-icon">⌥</span>
+    <span class="dc-fab-badge" id="dc-error-badge">0</span>
+  </button>
+
+  <div id="dc-panel">
+    <div id="dc-drag"></div>
+    <div id="dc-header">
+      <span id="dc-title">DevConsole</span>
+      <span class="dc-pulse"></span>
+      <button class="dc-hbtn" id="dc-clear-btn" title="Clear active tab">🗑</button>
+      <button class="dc-hbtn" id="dc-copy-btn" title="Copy logs to clipboard">📋</button>
+      <button class="dc-hbtn" id="dc-minimize-btn" title="Minimize">−</button>
+    </div>
+
+    <div id="dc-tabs">
+      <button class="dc-tab active" data-tab="console">Console<span class="dc-tab-count" id="cnt-console" style="display:none"></span></button>
+      <button class="dc-tab" data-tab="network">Network<span class="dc-tab-count" id="cnt-network" style="display:none"></span></button>
+      <button class="dc-tab" data-tab="storage">Storage</button>
+      <button class="dc-tab" data-tab="dom">DOM</button>
+      <button class="dc-tab" data-tab="system">System</button>
+      <button class="dc-tab" data-tab="settings">⚙</button>
+    </div>
+
+    <div class="dc-panel-content active" id="panel-console">
+      <div class="dc-scroll" id="console-output"></div>
+      <div class="dc-repl">
+        <input class="dc-input" id="repl-input" placeholder="▶ execute javascript…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button class="dc-run-btn" id="repl-run">RUN</button>
+      </div>
+    </div>
+
+    <div class="dc-panel-content" id="panel-network">
+      <div class="dc-net-filter">
+        <input class="dc-filter-input" id="net-filter" placeholder="Filter by URL or method…">
+        <button class="dc-clear-btn" id="net-clear">Clear</button>
+      </div>
+      <div class="dc-scroll" id="network-output"></div>
+    </div>
+
+    <div class="dc-panel-content" id="panel-storage">
+      <div class="dc-storage-nav">
+        <button class="dc-st-btn active" data-storage="indexeddb">IndexedDB</button>
+        <button class="dc-st-btn" data-storage="localstorage">LocalStorage</button>
+        <button class="dc-st-btn" data-storage="sessionstorage">SessionStorage</button>
+      </div>
+      <div class="dc-storage-actions">
+        <button class="dc-clear-btn" id="storage-refresh">↺ Refresh</button>
+      </div>
+      <div class="dc-scroll" id="storage-output"></div>
+    </div>
+
+    <div class="dc-panel-content" id="panel-dom">
+      <div class="dc-dom-toolbar">
+        <button class="dc-dom-btn" id="dom-refresh-btn">↺ Refresh tree</button>
+        <button class="dc-dom-btn" id="dom-pick-btn">⊕ Pick element</button>
+        <button class="dc-dom-btn" id="dom-collapse-btn">Collapse all</button>
+      </div>
+      <div class="dc-scroll" id="dom-output"></div>
+    </div>
+
+    <div class="dc-panel-content" id="panel-system">
+      <div class="dc-scroll">
+        <div class="dc-sys-grid" id="system-output"></div>
+      </div>
+    </div>
+
+    <div class="dc-panel-content" id="panel-settings">
+      <div class="dc-scroll dc-settings-body" id="settings-output"></div>
+    </div>
+  </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', html);
+
+  // ═══════════════════════════════════════════════════════════════
+  // 3. LOGIC
+  // ═══════════════════════════════════════════════════════════════
+  
   const S = {
     logs: [],
     network: [],
@@ -24,7 +829,6 @@
     }
   };
 
-  // ══ SETTINGS PERSISTENCE ══════════════════════════════════════════
   function saveSettings() {
     try { localStorage.setItem('__dc_settings', JSON.stringify(S.settings)); } catch(e) {}
   }
@@ -35,14 +839,11 @@
       if (saved) S.settings = { ...S.settings, ...JSON.parse(saved) };
     } catch(e) {}
   }
-
   loadSettings();
 
-  // ══ ELEMENTS ══════════════════════════════════════════════════════
   const el = {
     fab:      () => document.getElementById('dc-fab'),
     panel:    () => document.getElementById('dc-panel'),
-    drag:     () => document.getElementById('dc-drag'),
     consOut:  () => document.getElementById('console-output'),
     netOut:   () => document.getElementById('network-output'),
     storOut:  () => document.getElementById('storage-output'),
@@ -50,17 +851,19 @@
     sysOut:   () => document.getElementById('system-output'),
     settOut:  () => document.getElementById('settings-output'),
     replIn:   () => document.getElementById('repl-input'),
-    replRun:  () => document.getElementById('repl-run'),
     netFlt:   () => document.getElementById('net-filter'),
     badge:    () => document.getElementById('dc-error-badge'),
     cntC:     () => document.getElementById('cnt-console'),
     cntN:     () => document.getElementById('cnt-network'),
   };
 
-  // ══ UTILS ═════════════════════════════════════════════════════════
   function ts() {
     const d = new Date();
     return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}.${String(d.getMilliseconds()).padStart(3,'0')}`;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>');
   }
 
   function formatArg(a) {
@@ -73,11 +876,6 @@
       } catch(e) { return String(a); }
     }
     return escHtml(String(a));
-  }
-
-  function escHtml(s) {
-    // FIXED: Corrected HTML entities and quotes
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function truncUrl(url, max=55) {
@@ -224,11 +1022,11 @@
     o.innerHTML = filtered.map((req, i) => {
       const sc = req.error ? 's-err' : statusClass(req.status);
       const mc = methodClass(req.method);
-      const statusLabel = req.status ? `<span class="dc-req-status ${sc}">${req.status}</span>` : (req.error ? `<span class="dc-req-status s-err">ERR</span>` : '<span class="dc-req-status" style="color:var(--text2)">…</span>');
+      const statusLabel = req.status ? `<span class="dc-req-status ${sc}">${req.status}</span>` : (req.error ? `<span class="dc-req-status s-err">ERR</span>` : '<span class="dc-req-status" style="color:var(--dc-text2)">…</span>');
       const durLabel = req.duration != null ? `${req.duration}ms · ` : '';
       const headersHtml = Object.keys(req.headers).length
         ? Object.entries(req.headers).map(([k,v]) => `<div class="dc-detail-row"><span class="dc-detail-key">${escHtml(k)}: </span>${escHtml(v)}</div>`).join('')
-        : '<div class="dc-detail-row" style="color:var(--text2)">none</div>';
+        : '<div class="dc-detail-row" style="color:var(--dc-text2)">none</div>';
       return `<div class="dc-req" id="req-${i}" onclick="window.__dcToggleReq(${i})">
         <div class="dc-req-top">
           <span class="dc-method ${mc}">${req.method}</span>
@@ -250,6 +1048,7 @@
           </div>
         </div>
       </div>`;
+
     }).join('') || '<div class="dc-empty">No requests captured yet</div>';
   }
 
@@ -328,28 +1127,28 @@
   function renderIDB(o) {
     if (!S.dbs.length) { o.innerHTML = '<div class="dc-empty">No IndexedDB databases found</div>'; return; }
     o.innerHTML = S.dbs.map((db, di) => `<div class="dc-db-card" id="db-card-${di}">
-      <div class="dc-db-header" onclick="window.__dcToggleDb(${di})">
-        <div>
-          <div class="dc-db-name">${escHtml(db.name)}</div>
-          <div class="dc-db-meta">v${db.version} · ${db.stores.length} store${db.stores.length !== 1 ? 's' : ''}</div>
-        </div>
-        <span style="color:var(--text2); font-size:11px">▼</span>
-      </div>
-      <div class="dc-db-body">
-        ${db.stores.map((st, si) => `
-        <div class="dc-store-item" onclick="window.__dcToggleStore(${di},${si})">
-          <div class="dc-store-name">${escHtml(st.name)}</div>
-          <div class="dc-store-meta">${st.count} records · keyPath: ${st.keyPath || 'none'}</div>
-          <div class="dc-data-viewer" id="store-${di}-${si}">
-            ${st.data.length ? st.data.slice(0,20).map(item => `
-              <div class="dc-data-row">
-                <div class="dc-data-key">· ${escHtml(getKey(item, st.keyPath))}</div>
-                <div class="dc-data-val">${escHtml(fmtVal(item))}</div>
-              </div>`).join('') : '<div style="color:var(--text2);font-family:var(--mono);font-size:11px;padding:8px">Empty store</div>'}
+        <div class="dc-db-header" onclick="window.__dcToggleDb(${di})">
+          <div>
+            <div class="dc-db-name">${escHtml(db.name)}</div>
+            <div class="dc-db-meta">v${db.version} · ${db.stores.length} store${db.stores.length !== 1 ? 's' : ''}</div>
           </div>
-        </div>`).join('')}
-      </div>
-    </div>`).join('');
+          <span style="color:var(--dc-text2);font-size:11px">▼</span>
+        </div>
+        <div class="dc-db-body">
+          ${db.stores.map((st, si) => `
+          <div class="dc-store-item" onclick="window.__dcToggleStore(${di},${si})">
+            <div class="dc-store-name">${escHtml(st.name)}</div>
+            <div class="dc-store-meta">${st.count} records · keyPath: ${st.keyPath || 'none'}</div>
+            <div class="dc-data-viewer" id="store-${di}-${si}">
+              ${st.data.length ? st.data.slice(0,20).map(item => `
+                <div class="dc-data-row">
+                  <div class="dc-data-key">· ${escHtml(getKey(item, st.keyPath))}</div>
+                  <div class="dc-data-val">${escHtml(fmtVal(item))}</div>
+                </div>`).join('') : '<div style="color:var(--dc-text2);font-size:11px;padding:8px">Empty store</div>'}
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>`).join('');
   }
 
   function getKey(obj, keyPath) {
@@ -374,10 +1173,10 @@
     }
     if (!items.length) { o.innerHTML = `<div class="dc-empty">No ${name} items</div>`; return; }
     o.innerHTML = `<div style="padding:4px 0">` + items.map(({k,v}) => `
-      <div class="dc-kv-row">
-        <span class="dc-kv-key">${escHtml(k)}</span>
-        <span class="dc-kv-val">${escHtml(fmtVal(v))}</span>
-      </div>`).join('') + `</div>`;
+        <div class="dc-kv-row">
+          <span class="dc-kv-key">${escHtml(k)}</span>
+          <span class="dc-kv-val">${escHtml(fmtVal(v))}</span>
+        </div>`).join('') + `</div>`;
   }
 
   window.__dcToggleDb = function(di) {
@@ -400,9 +1199,9 @@
     o.appendChild(tree);
   }
 
-  function buildNode(el) {
+  function buildNode(nodeEl) {
     const wrap = document.createElement('div');
-    const children = [...el.children];
+    const children = [...nodeEl.children];
     const hasChildren = children.length > 0;
 
     const label = document.createElement('div');
@@ -415,20 +1214,20 @@
 
     const tag = document.createElement('span');
     tag.className = 'dc-tag';
-    tag.textContent = `<${el.tagName.toLowerCase()}`;
+    tag.textContent = `<${nodeEl.tagName.toLowerCase()}`;
     label.appendChild(tag);
 
-    if (el.id) {
+    if (nodeEl.id) {
       const id = document.createElement('span');
       id.className = 'dc-id';
-      id.textContent = ` #${el.id}`;
+      id.textContent = ` #${nodeEl.id}`;
       label.appendChild(id);
     }
 
-    if (el.className && typeof el.className === 'string' && el.className.trim()) {
+    if (nodeEl.className && typeof nodeEl.className === 'string' && nodeEl.className.trim()) {
       const cls = document.createElement('span');
       cls.className = 'dc-cls';
-      const clsStr = el.className.trim().split(/\s+/).slice(0,3).map(c => `.${c}`).join('');
+      const clsStr = nodeEl.className.trim().split(/\s+/).slice(0,3).map(c => `.${c}`).join('');
       cls.textContent = clsStr;
       label.appendChild(cls);
     }
@@ -438,7 +1237,7 @@
     close.textContent = '>';
     label.appendChild(close);
 
-    const txtContent = el.childNodes.length ? ([...el.childNodes].find(n => n.nodeType === 3 && n.textContent.trim())) : null;
+    const txtContent = nodeEl.childNodes.length ? ([...nodeEl.childNodes].find(n => n.nodeType === 3 && n.textContent.trim())) : null;
     if (txtContent) {
       const preview = document.createElement('span');
       preview.className = 'dc-txt-preview';
@@ -454,7 +1253,7 @@
         if (childDiv) childDiv.classList.toggle('open', !isOpen);
         arrow.textContent = (!isOpen) ? '▼' : '▶';
       }
-      showNodeDetail(el);
+      showNodeDetail(nodeEl);
     });
 
     wrap.appendChild(label);
@@ -481,17 +1280,16 @@
     const attrs = [...targetEl.attributes];
     const styles = window.getComputedStyle(targetEl);
 
-    d.innerHTML = `<div style="color:var(--accent2);font-family:var(--mono);font-size:12px;font-weight:700;margin-bottom:8px">${escHtml(tag)}</div>
-    ${attrs.length ? `<div class="dc-detail-title">Attributes</div>${attrs.map(a => `<div class="dc-attr-row"><span class="dc-attr-name">${escHtml(a.name)}</span>=<span class="dc-attr-val">"${escHtml(a.value)}"</span></div>`).join('')}`: ''}
-    <div class="dc-detail-title" style="margin-top:8px">Geometry</div>
-    <div class="dc-attr-row"><span class="dc-attr-name">size: </span><span class="dc-attr-val">${Math.round(targetEl.offsetWidth)}×${Math.round(targetEl.offsetHeight)}</span></div>
-    <div class="dc-attr-row"><span class="dc-attr-name">display: </span><span class="dc-attr-val">${styles.display}</span></div>
-    <div class="dc-attr-row"><span class="dc-attr-name">position: </span><span class="dc-attr-val">${styles.position}</span></div>`;
+    d.innerHTML = `<div style="color:var(--dc-accent2);font-size:12px;font-weight:700;margin-bottom:8px">${escHtml(tag)}</div>
+      ${attrs.length ? `<div class="dc-detail-title">Attributes</div>${attrs.map(a => `<div class="dc-attr-row"><span class="dc-attr-name">${escHtml(a.name)}</span>=<span class="dc-attr-val">"${escHtml(a.value)}"</span></div>`).join('')}` : ''}
+      <div class="dc-detail-title" style="margin-top:8px">Geometry</div>
+      <div class="dc-attr-row"><span class="dc-attr-name">size: </span><span class="dc-attr-val">${Math.round(targetEl.offsetWidth)}×${Math.round(targetEl.offsetHeight)}</span></div>
+      <div class="dc-attr-row"><span class="dc-attr-name">display: </span><span class="dc-attr-val">${styles.display}</span></div>
+      <div class="dc-attr-row"><span class="dc-attr-name">position: </span><span class="dc-attr-val">${styles.position}</span></div>`;
     
     el.domOut().prepend(d);
   }
 
-  // Element picker
   let _pickHandler = null;
   let _pickedEl = null;
 
@@ -572,7 +1370,8 @@
   // ══ SETTINGS RENDER ═══════════════════════════════════════════════
   function renderSettings() {
     const o = el.settOut(); if (!o) return;
-    o.innerHTML = `<div class="dc-setting-row">
+    o.innerHTML = `
+    <div class="dc-setting-row">
       <div class="dc-setting-info">
         <div class="dc-setting-name">Timestamps</div>
         <div class="dc-setting-desc">Show time prefix on each log entry</div>
@@ -620,7 +1419,7 @@
     </div>
     <div class="dc-setting-row" style="border:none">
       <div class="dc-setting-info">
-        <div class="dc-setting-name" style="color:var(--red)">Clear All Data</div>
+        <div class="dc-setting-name" style="color:var(--dc-red)">Clear All Data</div>
         <div class="dc-setting-desc">Wipe logs and network history</div>
       </div>
       <button class="dc-clear-btn" onclick="window.__dcClearAll()">Clear</button>
@@ -647,7 +1446,7 @@
   function switchTab(name) {
     S.activeTab = name;
     document.querySelectorAll('.dc-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-    document.querySelectorAll('.dc-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+    document.querySelectorAll('.dc-panel-content').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
 
     switch(name) {
       case 'console':  renderConsole();  break;
@@ -672,9 +1471,6 @@
   function togglePanel() {
     _panelOpen = !_panelOpen;
     const panel = el.panel();
-    
-    if (!panel) return; // Safety check
-
     if (_panelOpen) {
       panel.style.display = 'flex';
       requestAnimationFrame(() => { panel.classList.add('visible'); });
@@ -684,12 +1480,10 @@
       setTimeout(() => { panel.style.display = 'none'; }, 260);
     }
     
-    // Update FAB content
-    const fab = el.fab();
-    if(fab) {
-        fab.innerHTML = _panelOpen 
-            ? `✕<span class="dc-fab-badge" id="dc-error-badge" style="display:${S.errorCount>0?'flex':'none'}">${S.errorCount}</span>` 
-            : `⌥<span class="dc-fab-badge" id="dc-error-badge" style="display:${S.errorCount>0?'flex':'none'}">${S.errorCount}</span>`;
+    if (_panelOpen) {
+        el.fab().innerHTML = `✕<span class="dc-fab-badge" id="dc-error-badge" style="display:${S.errorCount>0?'flex':'none'}">${S.errorCount}</span>`;
+    } else {
+        el.fab().innerHTML = `⌥<span class="dc-fab-badge" id="dc-error-badge" style="display:${S.errorCount>0?'flex':'none'}">${S.errorCount}</span>`;
     }
   }
 
@@ -697,8 +1491,6 @@
   (function initDrag() {
     const handle = document.getElementById('dc-drag');
     const panel  = document.getElementById('dc-panel');
-    if(!handle || !panel) return;
-
     let dragging = false, startY = 0, startH = 0;
 
     function onStart(e) {
@@ -729,8 +1521,7 @@
   // ══ REPL ══════════════════════════════════════════════════════════
   function initRepl() {
     const input = el.replIn();
-    const run   = el.replRun();
-    if (!input || !run) return;
+    if (!input) return;
 
     function execute() {
       const code = input.value.trim();
@@ -746,7 +1537,6 @@
       el.consOut().appendChild(entry);
 
       try {
-        // eslint-disable-next-line no-eval
         const result = (0, eval)(code);
         if (result !== undefined) {
           const resEntry = document.createElement('div');
@@ -783,57 +1573,43 @@
       }
     });
 
-    run.addEventListener('click', execute);
+    // Run button
+    const runBtn = document.getElementById('repl-run');
+    if (runBtn) runBtn.addEventListener('click', execute);
   }
 
   // ══ EVENT WIRING ══════════════════════════════════════════════════
-  // Using a small delay ensures DOM is fully parsed if scripts are in <head>
-  // But since you load at end of body, it's fine. 
-  // However, checking existence prevents errors if HTML is missing elements.
-  
-  const fabBtn = document.getElementById('dc-fab');
-  if(fabBtn) fabBtn.addEventListener('click', togglePanel);
-
-  const minBtn = document.getElementById('dc-minimize-btn');
-  if(minBtn) minBtn.addEventListener('click', togglePanel);
+  document.getElementById('dc-fab').addEventListener('click', togglePanel);
+  document.getElementById('dc-minimize-btn').addEventListener('click', togglePanel);
 
   document.querySelectorAll('.dc-tab').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
-  const clearBtn = document.getElementById('dc-clear-btn');
-  if(clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      switch(S.activeTab) {
-        case 'console': S.logs = []; updateTabCount('console', 0); renderConsole(); break;
-        case 'network': S.network = []; updateTabCount('network', 0); renderNetwork(); break;
-        default: break;
-      }
-    });
-  }
+  document.getElementById('dc-clear-btn').addEventListener('click', () => {
+    switch(S.activeTab) {
+      case 'console': S.logs = []; updateTabCount('console', 0); renderConsole(); break;
+      case 'network': S.network = []; updateTabCount('network', 0); renderNetwork(); break;
+      default: break;
+    }
+  });
 
-  const copyBtn = document.getElementById('dc-copy-btn');
-  if(copyBtn) {
-    copyBtn.addEventListener('click', () => {
-      let text = '';
-      if (S.activeTab === 'console') {
-        text = S.logs.map(l => `[${l.ts}] [${l.type.toUpperCase()}] ${l.args.map(a => typeof a === 'object' ? JSON.stringify(a,null,2) : String(a)).join(' ')}`).join('\n');
-      } else if (S.activeTab === 'network') {
-        text = S.network.map(r => `[${r.ts}] ${r.method} ${r.url} → ${r.status || 'ERR'} (${r.duration}ms)`).join('\n');
-      }
-      if (text) {
-        navigator.clipboard ? navigator.clipboard.writeText(text).catch(() => {}) : (() => {})();
-        console.log('📋 Copied to clipboard');
-      }
-    });
-  }
+  document.getElementById('dc-copy-btn').addEventListener('click', () => {
+    let text = '';
+    if (S.activeTab === 'console') {
+      text = S.logs.map(l => `[${l.ts}] [${l.type.toUpperCase()}] ${l.args.map(a => typeof a === 'object' ? JSON.stringify(a,null,2) : String(a)).join(' ')}`).join('\n');
+    } else if (S.activeTab === 'network') {
+      text = S.network.map(r => `[${r.ts}] ${r.method} ${r.url} → ${r.status || 'ERR'} (${r.duration}ms)`).join('\n');
+    }
+    if (text) {
+      navigator.clipboard ? navigator.clipboard.writeText(text).catch(() => {}) : (() => {})();
+      console.log('📋 Copied to clipboard');
+    }
+  });
 
   // Network filter
-  const netFlt = el.netFlt();
-  if(netFlt) netFlt.addEventListener('input', e => renderNetwork(e.target.value));
-  
-  const netClr = document.getElementById('net-clear');
-  if(netClr) netClr.addEventListener('click', () => { S.network = []; updateTabCount('network', 0); renderNetwork(); });
+  el.netFlt().addEventListener('input', e => renderNetwork(e.target.value));
+  document.getElementById('net-clear').addEventListener('click', () => { S.network = []; updateTabCount('network', 0); renderNetwork(); });
 
   // Storage sub-tabs
   document.querySelectorAll('.dc-st-btn').forEach(btn => {
@@ -844,20 +1620,14 @@
     });
   });
 
-  const storRef = document.getElementById('storage-refresh');
-  if(storRef) storRef.addEventListener('click', loadStorage);
+  document.getElementById('storage-refresh').addEventListener('click', loadStorage);
 
   // DOM toolbar
-  const domRef = document.getElementById('dom-refresh-btn');
-  if(domRef) domRef.addEventListener('click', renderDomTree);
-  
-  const domPick = document.getElementById('dom-pick-btn');
-  if(domPick) domPick.addEventListener('click', () => {
+  document.getElementById('dom-refresh-btn').addEventListener('click', renderDomTree);
+  document.getElementById('dom-pick-btn').addEventListener('click', () => {
     S.isPicking ? stopPicking() : startPicking();
   });
-  
-  const domColl = document.getElementById('dom-collapse-btn');
-  if(domColl) domColl.addEventListener('click', () => {
+  document.getElementById('dom-collapse-btn').addEventListener('click', () => {
     document.querySelectorAll('.dc-children.open').forEach(c => c.classList.remove('open'));
     document.querySelectorAll('.dc-arrow').forEach(a => { if (a.textContent === '▼') a.textContent = '▶'; });
   });
@@ -875,15 +1645,6 @@
   initRepl();
   renderConsole();
 
-  // Boot message
   addLog('log', ['✅ DevConsole v2.0 loaded — click ⌥ to open']);
 
 })();
-
-function spamLogs() {
-  const types = ['log','warn','error','info'];
-  for (let i = 0; i < 12; i++) {
-    const t = types[i % 4];
-    console[t](`[${t.toUpperCase()}] Auto-generated entry #${i+1}`, { index: i, rand: Math.random().toFixed(4) });
-  }
-}
