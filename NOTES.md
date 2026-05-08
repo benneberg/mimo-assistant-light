@@ -1,8 +1,14 @@
-Model names
+My available Models names:
 MiMo-V2.5-Pro, MiMo-V2.5, MiMo-V2.5-TTS-VoiceClone, MiMo-V2.5-TTS-VoiceDesign、MiMo-V2.5-TTS, MiMo-V2-Pro, MiMo-V2-Omni, MiMo-V2-TTS
 
 for calls
 mimo-v2.5-pro, mimo-v2.5, mimo-v2.5-tts, mimo-v2.5-tts-voicedesign, mimo-v2.5-tts-voiceclone, mimo-v2-pro, mimo-v2-omni, mimo-v2-tts, mimo-v2-flash
+
+
+<option value="mimo-v2.5-pro">mimo-v2.5-pro</option>
+            <option value="mimo-v2.5">mimo-v2.5</option>
+            <option value="mimo-v2-pro">mimo-v2-pro</option>
+           <option value="mimo-v2-omni">mimo-v2-omni</option>
 
 Dedicated Base URL
 Compatible with OpenAI API protocol:
