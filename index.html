@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
 
@@ -20,7 +21,7 @@
       overflow: hidden;
       background: #0a0f1c;
       color: #e2e8f0;
-      font-family: 'Inter', system_ui, sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -54,7 +55,6 @@
     .touch-btn { touch-action: manipulation; user-select: none; }
     .safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 
-    /* Project Dropdown */
     .dropdown-menu {
       position: absolute; top: 100%; left: 0; right: auto;
       background: #1e293b; border: 1px solid #334155;
@@ -63,7 +63,6 @@
       min-width: 250px;
     }
     .dropdown-menu.show { display: block; }
-
   </style>
 </head>
 
@@ -71,8 +70,7 @@
 
   <!-- TOPBAR -->
   <header class="glass border-b border-slate-700 px-4 py-3 flex items-center justify-between z-50 flex-shrink-0">
-    
-    <!-- Project Manager (Left) -->
+    <!-- Project Manager -->
     <div class="relative">
       <button id="projectToggle" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl text-sm font-medium transition-colors">
         <i class="fa-solid fa-folder-tree text-cyan-400"></i>
@@ -97,7 +95,7 @@
        <h1 class="title-font text-xl font-semibold tracking-tighter hidden sm:block">mimo</h1>
     </div>
 
-    <!-- Actions (Right) -->
+    <!-- Actions -->
     <div class="flex items-center gap-2">
       <button id="indexBtn" class="touch-btn flex items-center gap-2 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 px-4 py-2 rounded-2xl text-sm font-medium transition-colors">
         <i class="fa-solid fa-bolt"></i> <span class="hidden sm:inline">Index</span>
@@ -146,21 +144,18 @@
 
     <!-- CHAT PANEL -->
     <div id="panel-chat" class="w-full lg:w-2/5 flex flex-col hidden lg:flex min-h-0 border-l border-slate-700">
-      
       <div id="chatView" class="flex-1 flex flex-col min-h-0 overflow-hidden">
-        
-                <div class="p-3 glass border-b border-slate-700 flex gap-3 items-center flex-shrink-0">
+        <div class="p-3 glass border-b border-slate-700 flex gap-3 items-center flex-shrink-0">
           <select id="modelSelect" class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2 text-sm appearance-none cursor-pointer">
-            <!-- Correct Model IDs from Xiaomi Docs -->
             <option value="mimo-v2.5-pro">MiMo-V2.5-Pro</option>
             <option value="mimo-v2.5">MiMo-V2.5</option>
-<option value="mimo-v2.5-tts">MiMo-V2.5-TTS</option>
-<option value="mimo-v2.5-tts-voicedesign">MiMo-V2.5-TTS-VoiceDesign</option>
-<option value="mimo-v2.5-tts-voiceclone">MiMo-V2.5-TTS-VoiceClone</option>
-<option value="mimo-v2-pro">MiMo-V2-Pro</option>
-<option value="mimo-v2-omni">MiMo-V2-Omni</option>
-<option value="mimo-v2-tts">MiMo-V2-TTS</option>
-<option value="mimo-v2-flash">MiMo-V2-Flash</option>
+            <option value="mimo-v2.5-tts">MiMo-V2.5-TTS</option>
+            <option value="mimo-v2.5-tts-voicedesign">MiMo-V2.5-TTS-VoiceDesign</option>
+            <option value="mimo-v2.5-tts-voiceclone">MiMo-V2.5-TTS-VoiceClone</option>
+            <option value="mimo-v2-pro">MiMo-V2-Pro</option>
+            <option value="mimo-v2-omni">MiMo-V2-Omni</option>
+            <option value="mimo-v2-tts">MiMo-V2-TTS</option>
+            <option value="mimo-v2-flash">MiMo-V2-Flash</option>
           </select>
           <label class="hidden sm:flex items-center gap-2 text-xs cursor-pointer">
             <input type="checkbox" id="showMetrics" checked class="accent-cyan-400 w-4 h-4">
@@ -182,10 +177,9 @@
                         class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-2xl px-4 py-3 pr-12 outline-none text-sm resize-none max-h-32 overflow-y-auto" 
                         placeholder="Ask Mimo..."></textarea>
               <div class="absolute right-2 bottom-2 flex flex-col gap-1">
-                 <!-- Image Upload for Multimodal -->
-                 <button onclick="triggerImageUpload()" class="touch-btn w-8 h-8 bg-slate-800 hover:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-colors" title="Upload Image for Vision">
-                   <i class="fa-solid fa-image text-sm"></i>
-                 </button>
+                <button onclick="triggerImageUpload()" class="touch-btn w-8 h-8 bg-slate-800 hover:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-colors" title="Upload Image for Vision">
+                  <i class="fa-solid fa-image text-sm"></i>
+                </button>
               </div>
             </div>
             
@@ -225,7 +219,7 @@
     </div>
   </div>
 
-    <!-- Settings Modal -->
+  <!-- Settings Modal -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
     <div class="glass max-w-md w-full rounded-3xl p-6 border border-slate-600 relative" onclick="event.stopPropagation()">
       <button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl touch-btn">&times;</button>
@@ -236,11 +230,10 @@
           <input id="apiKeyInput" type="password" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:border-cyan-400" placeholder="sk-...">
         </div>
         
-        <!-- Fetch Models Button -->
         <div class="flex gap-2">
-             <button onclick="fetchAvailableModels(event)" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2">
-                <i class="fa-solid fa-rotate"></i> Fetch Models
-            </button>
+          <button onclick="fetchAvailableModels(event)" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-rotate"></i> Fetch Models
+          </button>
         </div>
         <p class="text-xs text-slate-500 -mt-2">Click to auto-detect available models for your key.</p>
 
@@ -250,579 +243,462 @@
   </div>
 
   <script>
-    // --- STATE MANAGEMENT ---
+    // STATE
     let editor, currentFile = null;
     let attachedImage = null;
     let currentMainTab = 0;
     let saveTimeout;
     
-    // Database Structure in LocalStorage:
-    // 'mimo_db': { activeId: 'uuid', projects: { 'uuid': { name, files:{}, context:'', messages:[] } } }
-    let db = {
-        activeId: null,
-        projects: {}
-    };
+    let db = { activeId: null, projects: {} };
 
-    // --- INIT MONACO ---
-    require.config({
-    paths: {
-        vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs"
-    }
-});
+    // MONACO
+    require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs" } });
 
-require(["vs/editor/editor.main"], () => {
+    require(["vs/editor/editor.main"], () => {
+      editor = monaco.editor.create(document.getElementById("editor"), {
+        value: "// Select or Create a Project",
+        language: "javascript",
+        theme: "vs-dark",
+        automaticLayout: true,
+        fontSize: 14,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        wordWrap: 'on'
+      });
 
-    editor = monaco.editor.create(
-        document.getElementById("editor"),
-        {
-            value: "// Select or Create a Project",
-            language: "javascript",
-            theme: "vs-dark",
-            automaticLayout: true,
-            fontSize: 14,
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: 'on'
-        }
-    );
-
-    loadSavedModels();
-
-    editor.onDidChangeModelContent(() => {
+      loadSavedModels();
+      editor.onDidChangeModelContent(() => {
         if (currentFile && getActiveProject()) {
-            getActiveProject().files[currentFile] = editor.getValue();
-            triggerSave();
+          getActiveProject().files[currentFile] = editor.getValue();
+          triggerSave();
         }
+      });
+      initApp();
     });
 
-    initApp();
-});
-
-    // --- DATABASE & PROJECT CRUD ---
+    // DATABASE
     function loadDB() {
-        const saved = localStorage.getItem('mimo_db');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                db = parsed;
-                return;
-            } catch(e) { console.error("Corrupted DB", e); }
-        } 
-        // Create default project if none exists
+      const saved = localStorage.getItem('mimo_db');
+      if (saved) {
+        try { db = JSON.parse(saved); } catch(e) { console.error(e); }
+      } else {
         createNewProject("New Project", true);
+      }
     }
 
     function saveDB() {
-        try {
-            localStorage.setItem('mimo_db', JSON.stringify(db));
-        } catch(e) {
-            alert("Storage Full! Please export and delete some projects.");
-        }
+      try {
+        localStorage.setItem('mimo_db', JSON.stringify(db));
+      } catch(e) {
+        alert("Storage Full! Please export projects.");
+      }
     }
 
     function getActiveProject() {
-        return db.projects[db.activeId];
+      return db.projects[db.activeId];
     }
 
+    // PROJECTS
     function createNewProject(name = "Untitled", isInit = false) {
-        const id = 'p_' + Date.now();
-        const proj = {
-            id: id,
-            name: name,
-            files: {},
-            context: "",
-            messages: [], // Chat History
-            artefacts: []
-        };
-        db.projects[id] = proj;
-        db.activeId = id;
-        saveDB();
-        if (!isInit) {
-            switchProject(id);
-            renderProjectDropdown();
-        }
-        return proj;
+      const id = 'p_' + Date.now();
+      const proj = { id, name, files: {}, context: "", messages: [], artefacts: [] };
+      db.projects[id] = proj;
+      db.activeId = id;
+      saveDB();
+      if (!isInit) {
+        switchProject(id);
+        renderProjectDropdown();
+      }
+      return proj;
     }
 
     function switchProject(id) {
-        if (!db.projects[id]) return;
-        db.activeId = id;
-        saveDB();
-        
-        // Reset UI
-        currentFile = null;
-        attachedImage = null;
-        
-        // Load Files
-        renderFileList();
-        const proj = getActiveProject();
-        const firstFile = Object.keys(proj.files)[0];
-        if (firstFile) {
-            currentFile = firstFile;
-            editor.setValue(proj.files[firstFile]);
-        } else {
-            editor.setValue("// Empty Project");
-        }
-        
-        // Load Chat
-        renderChatHistory();
-        renderArtefacts();
-        
-        // Update Header
-        document.getElementById('currentProjectName').textContent = proj.name;
-        closeDropdowns();
+      if (!db.projects[id]) return;
+      db.activeId = id;
+      saveDB();
+      currentFile = null;
+      attachedImage = null;
+
+      renderFileList();
+      const proj = getActiveProject();
+      const firstFile = Object.keys(proj.files)[0];
+      if (firstFile) {
+        currentFile = firstFile;
+        editor.setValue(proj.files[firstFile]);
+      } else {
+        editor.setValue("// Empty Project");
+      }
+
+      renderChatHistory();
+      renderArtefacts();
+      document.getElementById('currentProjectName').textContent = proj.name;
+      closeDropdowns();
     }
 
     function deleteProject(id) {
-        if (Object.keys(db.projects).length <= 1) return alert("Cannot delete the last project.");
-        if (confirm("Delete this project and all its files?")) {
-            delete db.projects[id];
-            if (db.activeId === id) {
-                db.activeId = Object.keys(db.projects)[0];
-            }
-            saveDB();
-            switchProject(db.activeId);
-            renderProjectDropdown();
-        }
+      if (Object.keys(db.projects).length <= 1) return alert("Cannot delete the last project.");
+      if (confirm("Delete this project and all its files?")) {
+        delete db.projects[id];
+        if (db.activeId === id) db.activeId = Object.keys(db.projects)[0];
+        saveDB();
+        switchProject(db.activeId);
+        renderProjectDropdown();
+      }
     }
 
     function renderProjectDropdown() {
-        const container = document.getElementById('projectListContainer');
-        container.innerHTML = '';
-        
-        Object.values(db.projects).forEach(p => {
-            const isActive = p.id === db.activeId;
-            const div = document.createElement('div');
-            div.className = `flex items-center justify-between px-3 py-2 rounded-lg m-1 ${isActive ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-slate-700'}`;
-            div.innerHTML = `
-                <span class="truncate text-sm cursor-pointer flex-1" onclick="switchProject('${p.id}')">${p.name}</span>
-                <div class="flex gap-2 items-center">
-                    <button onclick="event.stopPropagation(); renameProject('${p.id}')" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-pen"></i></button>
-                    <button onclick="event.stopPropagation(); deleteProject('${p.id}')" class="text-red-500 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
+      const container = document.getElementById('projectListContainer');
+      container.innerHTML = '';
+      Object.values(db.projects).forEach(p => {
+        const isActive = p.id === db.activeId;
+        const div = document.createElement('div');
+        div.className = `flex items-center justify-between px-3 py-2 rounded-lg m-1 ${isActive ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-slate-700'}`;
+        div.innerHTML = `
+          <span class="truncate text-sm cursor-pointer flex-1" onclick="switchProject('${p.id}')">${p.name}</span>
+          <div class="flex gap-2 items-center">
+            <button onclick="event.stopPropagation(); renameProject('${p.id}')" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="event.stopPropagation(); deleteProject('${p.id}')" class="text-red-500 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+          </div>`;
+        container.appendChild(div);
+      });
     }
 
     function renameProject(id) {
-        const newName = prompt("Enter new project name:", db.projects[id].name);
-        if (newName) {
-            db.projects[id].name = newName;
-            saveDB();
-            renderProjectDropdown();
-            if (id === db.activeId) document.getElementById('currentProjectName').textContent = newName;
-        }
+      const newName = prompt("Enter new project name:", db.projects[id].name);
+      if (newName) {
+        db.projects[id].name = newName;
+        saveDB();
+        renderProjectDropdown();
+        if (id === db.activeId) document.getElementById('currentProjectName').textContent = newName;
+      }
     }
 
     function triggerSave() {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(saveDB, 1000);
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(saveDB, 1000);
     }
-    // --- MODEL LOADER ---
-    
+
+    // MODELS
     async function fetchAvailableModels(ev) {
-        const apiKey = document.getElementById("apiKeyInput").value.trim();
-        if (!apiKey) return alert("Please enter an API Key first.");
+      const apiKey = document.getElementById("apiKeyInput").value.trim();
+      if (!apiKey) return alert("Please enter an API Key first.");
 
-        const btn = event.target.closest('button');
-        const originalContent = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
-        btn.disabled = true;
+      const btn = ev.currentTarget || ev.target.closest('button');
+      const originalContent = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+      btn.disabled = true;
 
-        try {
-            // Standard OpenAI endpoint to list models
-            const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/models", {
-                method: "GET",
-                headers: { "Authorization": `Bearer ${apiKey}` }
-            });
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.error?.message || `Status ${res.status}`);
-            }
-
-            const data = await res.json();
-            const models = data.data || [];
-
-            if (models.length === 0) throw new Error("No models found for this key.");
-
-            // Populate the Select Dropdown
-            const select = document.getElementById("modelSelect");
-            select.innerHTML = ''; // Clear existing
-
-            // Sort models (newest first usually) or alphabetically
-            models.sort((a, b) => (a.id < b.id ? -1 : 1));
-
-            models.forEach(m => {
-                const opt = document.createElement("option");
-                opt.value = m.id;
-                opt.textContent = m.id;
-                select.appendChild(opt);
-            });
-
-            // Save preferences
-            localStorage.setItem("mimo_api_key", apiKey);
-            localStorage.setItem("mimo_available_models", JSON.stringify(models.map(m => m.id)));
-            
-            alert(`Success! Loaded ${models.length} models.`);
-            document.getElementById("settingsModal").classList.add("hidden");
-
-        } catch (e) {
-            alert("Failed to fetch models: " + e.message);
-        } finally {
-            btn.innerHTML = originalContent;
-            btn.disabled = false;
-        }
-    }
-
-    // Call this on startup to load saved models into the dropdown
-    function loadSavedModels() {
-        const saved = localStorage.getItem("mimo_available_models");
-        if (saved) {
-            try {
-                const models = JSON.parse(saved);
-                const select = document.getElementById("modelSelect");
-                select.innerHTML = '';
-                models.forEach(id => {
-                    const opt = document.createElement("option");
-                    opt.value = id;
-                    opt.textContent = id;
-                    select.appendChild(opt);
-                });
-            } catch(e) {}
-        }
-    }
-
-    
-    // --- CHAT LOGIC (Streaming) ---
-    function renderChatHistory() {
-        const container = document.getElementById("chatMessages");
-        container.innerHTML = ''; // Clear current
-        const proj = getActiveProject();
-        if (!proj) return;
-
-        proj.messages.forEach(msg => {
-            // We don't re-render the thinking indicator or stream, just final messages
-            if (msg.role === 'user' || msg.role === 'assistant') {
-                appendMessageDOM(msg.role, msg.content, msg.metadata, false);
-            }
+      try {
+        const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/models", {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${apiKey}` }
         });
-        
-        setTimeout(() => container.scrollTo({ top: container.scrollHeight, behavior: "smooth" }), 50);
+
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+
+        const data = await res.json();
+        const models = data.data || [];
+        if (models.length === 0) throw new Error("No models found.");
+
+        const select = document.getElementById("modelSelect");
+        select.innerHTML = '';
+        models.sort((a, b) => a.id < b.id ? -1 : 1);
+        models.forEach(m => {
+          const opt = document.createElement("option");
+          opt.value = m.id;
+          opt.textContent = m.id;
+          select.appendChild(opt);
+        });
+
+        localStorage.setItem("mimo_api_key", apiKey);
+        localStorage.setItem("mimo_available_models", JSON.stringify(models.map(m => m.id)));
+        alert(`Loaded ${models.length} models!`);
+        document.getElementById("settingsModal").classList.add("hidden");
+      } catch (e) {
+        alert("Failed: " + e.message);
+      } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+      }
     }
 
-    // Helper to just add DOM elements (used by history loader and live stream)
+    function loadSavedModels() {
+      const saved = localStorage.getItem("mimo_available_models");
+      if (saved) {
+        try {
+          const models = JSON.parse(saved);
+          const select = document.getElementById("modelSelect");
+          select.innerHTML = '';
+          models.forEach(id => {
+            const opt = document.createElement("option");
+            opt.value = id; opt.textContent = id;
+            select.appendChild(opt);
+          });
+        } catch(e) {}
+      }
+    }
+
+    // CHAT
+    function renderChatHistory() {
+      const container = document.getElementById("chatMessages");
+      container.innerHTML = '';
+      const proj = getActiveProject();
+      if (!proj) return;
+      proj.messages.forEach(msg => {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          appendMessageDOM(msg.role, msg.content, msg.metadata, false);
+        }
+      });
+      setTimeout(() => container.scrollTo({ top: container.scrollHeight, behavior: "smooth" }), 50);
+    }
+
     function appendMessageDOM(role, content, metadata = null, scroll = true) {
-        const container = document.getElementById("chatMessages");
-        const div = document.createElement("div");
-        div.className = `flex ${role === "user" ? "justify-end" : "justify-start"} items-end gap-2`;
-        
-        // Basic HTML construction
-        let html = `<div class="${role === "user" ? "message-user" : "message-ai"} max-w-[90%] sm:max-w-[85%] px-4 py-2.5 text-sm sm:text-base">`;
-        
-        // Handle images for User messages
-        if (role === 'user' && content.image) {
-             html += `<img src="${content.image}" class="mb-2 max-h-32 rounded-lg">`;
-             if (!content.text) { html += `<div class="text-xs opacity-70">Image attached</div>`; }
-        }
-        
-        const textContent = (typeof content === 'string') ? content : content.text;
-        html += `<div class="whitespace-pre-wrap break-words">${escapeHtml(textContent || "")}</div>`;
+      const container = document.getElementById("chatMessages");
+      const div = document.createElement("div");
+      div.className = `flex ${role === "user" ? "justify-end" : "justify-start"} items-end gap-2`;
 
-        if (metadata && document.getElementById("showMetrics").checked) {
-            const lat = metadata.latency ? `${metadata.latency}ms` : '';
-            const tok = metadata.tokens ? `${metadata.tokens} tok` : '';
-            html += `<div class="text-[10px] mt-2 pt-2 border-t border-slate-600/30 font-mono flex justify-between text-slate-400 opacity-70">
-              <span>${metadata.model}</span><span>${lat}</span><span>${tok}</span>
-            </div>`;
-        }
-        html += `</div>`;
-        div.innerHTML = html;
-        container.appendChild(div);
-        
-        if (scroll) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-        return div;
+      let html = `<div class="${role === "user" ? "message-user" : "message-ai"} max-w-[90%] sm:max-w-[85%] px-4 py-2.5 text-sm sm:text-base">`;
+
+      if (role === 'user' && content?.image) {
+        html += `<img src="${content.image}" class="mb-2 max-h-32 rounded-lg">`;
+        if (!content.text) html += `<div class="text-xs opacity-70">Image attached</div>`;
+      }
+
+      const textContent = typeof content === 'string' ? content : (content?.text || "");
+      html += `<div class="whitespace-pre-wrap break-words">${escapeHtml(textContent)}</div>`;
+
+      if (metadata && document.getElementById("showMetrics").checked) {
+        html += `<div class="text-[10px] mt-2 pt-2 border-t border-slate-600/30 font-mono flex justify-between text-slate-400 opacity-70">
+          <span>${metadata.model || ''}</span><span>${metadata.latency ? metadata.latency + 'ms' : ''}</span><span>${metadata.tokens ? metadata.tokens + ' tok' : ''}</span>
+        </div>`;
+      }
+      html += `</div>`;
+      div.innerHTML = html;
+      container.appendChild(div);
+      if (scroll) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      return div;
     }
 
-    // STREAMING IMPLEMENTATION
+    // FIXED STREAMING
     async function sendChat() {
-        const promptEl = document.getElementById("promptInput");
-        const prompt = promptEl.value.trim();
-        if (!prompt && !attachedImage) return;
+      const promptEl = document.getElementById("promptInput");
+      const prompt = promptEl.value.trim();
+      if (!prompt && !attachedImage) return;
 
-        const model = document.getElementById("modelSelect").value;
-        const proj = getActiveProject();
-        if (!proj) return;
+      const model = document.getElementById("modelSelect").value;
+      const proj = getActiveProject();
+      if (!proj) return;
 
-        // 1. Construct User Message Object
-        const userMessage = { role: "user", content: { text: prompt, image: attachedImage } };
-        
-        // Save User Message immediately
-        proj.messages.push(userMessage);
-        saveDB();
-        
-        // Render User Message
-        appendMessageDOM('user', userMessage.content);
-        
-        promptEl.value = "";
-        removeImage();
-        document.getElementById("sendBtn").disabled = true;
-        document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      const userMessage = { role: "user", content: { text: prompt, image: attachedImage } };
+      proj.messages.push(userMessage);
+      saveDB();
+      appendMessageDOM('user', userMessage.content);
 
-        // 2. Prepare API Payload
-        const apiKey = localStorage.getItem("mimo_api_key");
-        if (!apiKey) return alert("Add API Key in Settings.");
+      promptEl.value = "";
+      removeImage();
+      const sendBtn = document.getElementById("sendBtn");
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
-        const start = Date.now();
-        
-        // System Prompt 
-      let systemContent = `You are Mimo, a helpful AI coding assistant. 
+      const apiKey = localStorage.getItem("mimo_api_key");
+      if (!apiKey) {
+        alert("Add API Key in Settings.");
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+        return;
+      }
+
+      const start = Date.now();
+      let fullContent = "";
+      let msgDom = null;
+
+      let systemContent = `You are Mimo, a helpful AI coding assistant.
 
 IMPORTANT RULES:
-- Always confirm before taking action. Say what you plan to do first.
+- Always confirm before taking action.
 - When creating files or code, explain what you're building.
-- Keep responses clear and concise.
-- When writing code, use proper markdown code blocks with language tags.
-- For HTML/CSS/JS projects, create complete, working code.`;
+- Use proper markdown code blocks.`;
 
-    if (proj.context) systemContent += "\n\nPROJECT FILES:\n" + proj.context;
+      if (proj.context) systemContent += "\n\nPROJECT FILES:\n" + proj.context;
 
-    const history = proj.messages.slice(-10).map(m => {
-        if (m.role === 'user') {
-            if (m.content.image) return { 
-                role: 'user', 
-                content: [
-                    { type: 'text', text: m.content.text || "Image" },
-                    { type: 'image_url', image_url: { url: m.content.image } }
-                ] 
-            };
-            return { role: 'user', content: m.content.text || "" };
+      const history = proj.messages.slice(-10).map(m => {
+        if (m.role === 'user' && m.content?.image) {
+          return {
+            role: 'user',
+            content: [
+              { type: 'text', text: m.content.text || "Image" },
+              { type: 'image_url', image_url: { url: m.content.image } }
+            ]
+          };
         }
-        return { role: 'assistant', content: m.content };
-    });
+        return { role: m.role, content: typeof m.content === 'string' ? m.content : m.content?.text || "" };
+      });
 
-    try {
+      try {
         const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-  "Content-Type": "application/json",
-  "Authorization": `Bearer ${apiKey}`
-},
-            body: JSON.stringify({ 
-                model, 
-                messages: [
-                    { role: "system", content: systemContent },
-                    ...history
-                ], 
-                stream: true,
-                temperature: 0.5,
-                max_completion_tokens: 2048
-            })
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: "system", content: systemContent }, ...history],
+            stream: true,
+            temperature: 0.5,
+            max_completion_tokens: 2048
+          })
         });
 
         if (!res.ok) throw new Error(`API Error ${res.status}`);
 
- 
+        msgDom = appendMessageDOM('assistant', '', { model, latency: 0 });
 
-            // 3. Handle Stream
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder();
-            
-            // Add empty AI message to DOM to fill
-            const aiMsgObj = { role: 'assistant', content: '', metadata: { model, latency: 0 } };
-            const msgDom = appendMessageDOM(
-    'assistant',
-    '',
-    {
-        model,
-        latency: 0,
-        tokens: 0
-    }
-);
-            
-            let fullContent = "";
-            let buffer = "";
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split("\n");
-                buffer = lines.pop(); // Keep incomplete line
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-                for (const line of lines) {
-                    if (line.startsWith("data: ")) {
-                        const jsonStr = line.slice(6);
-                        if (jsonStr === "[DONE]") break;
-                        
-                        try {
-                            const data = JSON.parse(jsonStr);
-                            const token = data.choices?.[0]?.delta?.content || "";
-                            fullContent += token;
-                            
-                            // Update DOM
-                            const contentDiv = msgDom.querySelector('.whitespace-pre-wrap');
-                            if (contentDiv) contentDiv.innerText = fullContent;
-                            const metricsDiv = msgDom.querySelector('.font-mono');
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
 
-if (metricsDiv) {
-    metricsDiv.innerHTML = `
-        <span>${model}</span>
-        <span>${latency}ms</span>
-        <span>${fullContent.length} chars</span>
-    `;
-}
-                           const latency = Date.now() - start;
-                          // Auto scroll
-                            const container = document.getElementById("chatMessages");
-                            container.scrollTop = container.scrollHeight;
-                        } catch(e) { /* ignore parsing errors in stream */ }
-                    }
-                }
-            }
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") break;
 
-            // 4. Finalize
-            const latency = Date.now() - start;
-            aiMsgObj.content = fullContent;
-            aiMsgObj.metadata.latency = latency;
-            
-            // Save to history
-            proj.messages.push(aiMsgObj);
-            saveDB();
-            
-            // Check for Artefacts (Code Blocks)
-            parseAndAddArtefacts(fullContent, proj);
+            try {
+              const data = JSON.parse(jsonStr);
+              const token = data.choices?.[0]?.delta?.content || "";
+              fullContent += token;
 
-        } catch (e) {
-            alert("Error: " + e.message);
-            proj.messages.push({ role: 'assistant', content: "Error: " + e.message });
-            saveDB();
-        } finally {
-            document.getElementById("sendBtn").disabled = false;
-            document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+              const contentDiv = msgDom.querySelector('.whitespace-pre-wrap');
+              if (contentDiv) contentDiv.innerText = fullContent;
+
+              const metricsDiv = msgDom.querySelector('.font-mono');
+              if (metricsDiv) {
+                const latency = Date.now() - start;
+                metricsDiv.innerHTML = `
+                  <span>${model}</span>
+                  <span>${latency}ms</span>
+                  <span>${fullContent.length} chars</span>`;
+              }
+              msgDom.scrollIntoView({ behavior: "smooth" });
+            } catch (e) {}
+          }
         }
+      } catch (e) {
+        alert("Error: " + e.message);
+      } finally {
+        const latency = Date.now() - start;
+        if (msgDom && fullContent) {
+          const metricsDiv = msgDom.querySelector('.font-mono');
+          if (metricsDiv) {
+            metricsDiv.innerHTML = `
+              <span>${model}</span>
+              <span>${latency}ms</span>
+              <span>${fullContent.length} chars</span>`;
+          }
+        }
+
+        if (fullContent) {
+          proj.messages.push({ role: 'assistant', content: fullContent, metadata: { model, latency } });
+          saveDB();
+          parseAndAddArtefacts(fullContent, proj);
+        }
+
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+      }
     }
-const latency = Date.now() - start;
 
-aiMsgObj.content = fullContent;
-aiMsgObj.metadata.latency = latency;
-
-const metricsDiv = msgDom.querySelector('.font-mono');
-
-if (metricsDiv) {
-
-    metricsDiv.innerHTML = `
-        <span>${aiMsgObj.metadata.model || model}</span>
-        <span>${latency}ms</span>
-        <span>${fullContent.length} chars</span>
-    `;
-}
+    // ARTEFACTS
     function parseAndAddArtefacts(text, project) {
-        const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-        let match;
-        while ((match = codeBlockRegex.exec(text)) !== null) {
-            const lang = match[1] || 'code';
-            const code = match[2].trim();
-            // Add to project artefacts
-            project.artefacts = project.artefacts || [];
-            project.artefacts.unshift({ type: "code", content: code, lang: lang });
-            saveDB();
-        }
-        renderArtefacts();
+      const regex = /```(\w+)?\n([\s\S]*?)```/g;
+      let match;
+      project.artefacts = project.artefacts || [];
+      while ((match = regex.exec(text)) !== null) {
+        project.artefacts.unshift({
+          type: "code",
+          lang: match[1] || 'code',
+          content: match[2].trim()
+        });
+        saveDB();
+      }
+      renderArtefacts();
     }
 
-    // --- FILE LOGIC ---
-    document.getElementById("zipInput").addEventListener("change", async e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const zip = await JSZip.loadAsync(file);
-        const proj = getActiveProject();
-        if(!proj) return;
+    function renderArtefacts() {
+      const container = document.getElementById("artefactsContainer");
+      const proj = getActiveProject();
+      const items = proj?.artefacts || [];
+      container.innerHTML = items.length === 0 
+        ? `<p class="text-center text-slate-500 py-20">No artefacts yet.</p>` 
+        : "";
 
-        proj.files = {}; // Clear current files in project
-        
-        for (const name in zip.files) {
-            if (zip.files[name].dir) continue;
-            proj.files[name] = await zip.files[name].async("string");
+      items.forEach(a => {
+        if (a.type === 'code') {
+          const div = document.createElement('div');
+          div.className = "artefact-card bg-slate-900 rounded-xl p-3";
+          div.innerHTML = `
+            <div class="text-xs text-cyan-400 mb-2 font-mono">${a.lang}</div>
+            <pre class="text-xs overflow-auto max-h-40 text-slate-300">${escapeHtml(a.content)}</pre>
+          `;
+          container.appendChild(div);
         }
-        
-        saveDB();
-        renderFileList();
-        switchMainTab(0); // Go to editor
-        e.target.value = '';
+      });
+    }
+
+    // FILES
+    document.getElementById("zipInput").addEventListener("change", async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const zip = await JSZip.loadAsync(file);
+      const proj = getActiveProject();
+      if (!proj) return;
+      proj.files = {};
+      for (const name in zip.files) {
+        if (!zip.files[name].dir) {
+          proj.files[name] = await zip.files[name].async("string");
+        }
+      }
+      saveDB();
+      renderFileList();
+      switchMainTab(0);
+      e.target.value = '';
     });
 
     function renderFileList() {
-    const proj = getActiveProject();
-    const count = proj ? Object.keys(proj.files).length : 0;
+      const proj = getActiveProject();
+      const count = proj ? Object.keys(proj.files).length : 0;
+      document.getElementById("fileCount").textContent = `${count} files`;
 
-    document.getElementById("fileCount").textContent = `${count} files`;
-
-    ["fileList", "drawerFileList"].forEach(id => {
-
+      ["fileList", "drawerFileList"].forEach(id => {
         const el = document.getElementById(id);
         el.innerHTML = "";
-
         if (!proj) return;
 
         Object.keys(proj.files).forEach(name => {
-
-            const btn = document.createElement("button");
-
-            btn.className =
-                `w-full px-4 py-3 text-left hover:bg-slate-800 active:bg-slate-700 flex items-center gap-3 text-sm truncate ${
-                    currentFile === name
-                        ? 'bg-slate-800 text-cyan-400'
-                        : ''
-                }`;
-
-            btn.innerHTML =
-                `<i class="fa-solid fa-file-code w-4 text-center opacity-60"></i>
-                 <span class="truncate">${name.split('/').pop()}</span>`;
-
-            btn.onclick = () => {
-
-                currentFile = name;
-
-                editor.setValue(proj.files[name]);
-
-                monaco.editor.setModelLanguage(
-                    editor.getModel(),
-                    getLang(name)
-                );
-
-                if (window.innerWidth < 1024) {
-                    toggleFilePanel();
-                }
-
-                renderFileList();
-            };
-
-            el.appendChild(btn);
+          const btn = document.createElement("button");
+          btn.className = `w-full px-4 py-3 text-left hover:bg-slate-800 active:bg-slate-700 flex items-center gap-3 text-sm truncate ${currentFile === name ? 'bg-slate-800 text-cyan-400' : ''}`;
+          btn.innerHTML = `<i class="fa-solid fa-file-code w-4 text-center opacity-60"></i><span class="truncate">${name.split('/').pop()}</span>`;
+          btn.onclick = () => {
+            currentFile = name;
+            editor.setValue(proj.files[name]);
+            monaco.editor.setModelLanguage(editor.getModel(), getLang(name));
+            if (window.innerWidth < 1024) toggleFilePanel();
+            renderFileList();
+          };
+          el.appendChild(btn);
         });
-    });
-}
-
-    function renderArtefacts() {
-        const container = document.getElementById("artefactsContainer");
-        const proj = getActiveProject();
-        const items = (proj && proj.artefacts) ? proj.artefacts : [];
-        
-        container.innerHTML = items.length === 0 ? `<p class="text-center text-slate-500 py-20">No artefacts yet.</p>` : "";
-        
-        items.forEach((a, i) => {
-             if(a.type === 'code') {
-                 const div = document.createElement('div');
-                 div.className = "bg-slate-900 rounded-xl p-2";
-                 div.innerHTML = `<div class="text-xs text-cyan-400 mb-1">Artefact: ${a.lang}</div><pre class="text-xs overflow-auto max-h-40">${escapeHtml(a.content)}</pre>`;
-                 container.appendChild(div);
-             }
-        });
+      });
     }
 
-    // --- HELPERS ---
+    // HELPERS
     function escapeHtml(text) {
       return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
@@ -835,7 +711,7 @@ if (metricsDiv) {
     }
 
     function triggerImageUpload() { document.getElementById("imageInput").click(); }
-    
+
     document.getElementById("imageInput").addEventListener("change", e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -849,11 +725,11 @@ if (metricsDiv) {
       e.target.value = '';
     });
 
-   window.removeImage = function() {
+    window.removeImage = function() {
       attachedImage = null;
       document.getElementById("imagePreview").classList.add("hidden");
-    }
-    
+    };
+
     function startVoiceInput() {
       const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!Speech) return alert("Voice not supported");
@@ -863,20 +739,26 @@ if (metricsDiv) {
       rec.start();
     }
 
-    // --- UI CONTROLS ---
+    // UI
     function switchMainTab(tab) {
       currentMainTab = tab;
       const editorPanel = document.getElementById("panel-editor");
       const chatPanel = document.getElementById("panel-chat");
-      
+
       if (window.innerWidth >= 1024) {
         editorPanel.classList.remove('hidden');
         chatPanel.classList.remove('hidden');
+        chatPanel.classList.add('flex');
       } else {
         editorPanel.classList.toggle('hidden', tab !== 0);
         chatPanel.classList.toggle('hidden', tab === 0);
-        if (tab === 2) { switchChatTab(1); chatPanel.classList.remove('hidden'); } 
-        else if (tab === 1) { switchChatTab(0); chatPanel.classList.remove('hidden'); }
+        if (tab === 2) {
+          document.getElementById("chatView").classList.add("hidden");
+          document.getElementById("artefactsView").classList.remove("hidden");
+        } else if (tab === 1) {
+          document.getElementById("chatView").classList.remove("hidden");
+          document.getElementById("artefactsView").classList.add("hidden");
+        }
       }
 
       for (let i = 0; i < 3; i++) {
@@ -890,45 +772,37 @@ if (metricsDiv) {
       document.getElementById("artefactsView").classList.toggle("hidden", tab !== 1);
     }
 
-   window.toggleFilePanel = function() {
+    window.toggleFilePanel = function() {
       document.getElementById("fileDrawer").classList.toggle("hidden");
-    }
-    
+    };
+
     function closeDropdowns() {
-        document.getElementById('projectDropdown').classList.remove('show');
+      document.getElementById('projectDropdown').classList.remove('show');
     }
 
-    // --- EVENT LISTENERS ---
-    document.getElementById("projectToggle").onclick = (e) => {
-        e.stopPropagation();
-        document.getElementById('projectDropdown').classList.toggle('show');
+    // EVENT LISTENERS
+    document.getElementById("projectToggle").onclick = e => {
+      e.stopPropagation();
+      document.getElementById('projectDropdown').classList.toggle('show');
     };
-    
+
     document.addEventListener('click', closeDropdowns);
 
     document.getElementById("indexBtn").onclick = () => {
-      const proj = getActiveProject(); // Or however you access your project state
-      if(!proj) return;
-      
+      const proj = getActiveProject();
+      if (!proj || Object.keys(proj.files).length === 0) return alert("No files to index.");
       let ctx = "";
-      const entries = Object.entries(proj.files);
-      if (entries.length === 0) return alert("No files to index. Upload a ZIP.");
-      
-      // CHANGED: Slicing to 30000 chars per file so AI sees the whole code
-      entries.slice(0, 40).forEach(([n, c]) => ctx += `FILE: ${n}\n${c.slice(0, 30000)}\n---\n`);
-      
+      Object.entries(proj.files).slice(0, 40).forEach(([n, c]) => {
+        ctx += `FILE: ${n}\n${c.slice(0, 30000)}\n---\n`;
+      });
       proj.context = ctx;
-      saveDB(); // Save context to project
-      appendMessageDOM(
-        "assistant",
-        `Indexed ${entries.length} files. I can now see the full content.`
-       );
+      saveDB();
+      appendMessageDOM("assistant", `Indexed ${Object.keys(proj.files).length} files.`);
     };
 
     document.getElementById("exportZipBtn").onclick = async () => {
       const proj = getActiveProject();
       if (!proj) return;
-      
       const zip = new JSZip();
       Object.entries(proj.files).forEach(([n, c]) => zip.file(n, c));
       const blob = await zip.generateAsync({ type: "blob" });
@@ -938,7 +812,9 @@ if (metricsDiv) {
       a.click();
     };
 
-    document.getElementById("settingsBtn").onclick = () => document.getElementById("settingsModal").classList.remove("hidden");
+    document.getElementById("settingsBtn").onclick = () => 
+      document.getElementById("settingsModal").classList.remove("hidden");
+
     document.getElementById("saveSettingsBtn").onclick = () => {
       localStorage.setItem("mimo_api_key", document.getElementById("apiKeyInput").value.trim());
       document.getElementById("settingsModal").classList.add("hidden");
@@ -947,29 +823,37 @@ if (metricsDiv) {
     const txt = document.getElementById("promptInput");
     txt.addEventListener("input", () => {
       txt.style.height = 'auto';
-      txt.style.height = (txt.scrollHeight) + 'px';
+      txt.style.height = txt.scrollHeight + 'px';
     });
     txt.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendChat();
+      }
     });
     document.getElementById("sendBtn").onclick = sendChat;
 
     // INIT
     function initApp() {
-        loadDB();
-        switchProject(db.activeId);
-        renderProjectDropdown();
-        
-        if (localStorage.getItem("mimo_api_key")) {
-            document.getElementById("apiKeyInput").value = localStorage.getItem("mimo_api_key");
-        }
-        
-        if (window.innerWidth < 1024) switchMainTab(1); // Start on Chat for mobile
-        console.log("Mimo Ready.");
+      loadDB();
+      switchProject(db.activeId);
+      renderProjectDropdown();
+      const savedKey = localStorage.getItem("mimo_api_key");
+      if (savedKey) document.getElementById("apiKeyInput").value = savedKey;
+      if (window.innerWidth < 1024) switchMainTab(1);
+      console.log("Mimo Ready.");
     }
 
-
+    // Expose global functions
+    window.createNewProject = createNewProject;
+    window.switchProject = switchProject;
+    window.renameProject = renameProject;
+    window.deleteProject = deleteProject;
+    window.fetchAvailableModels = fetchAvailableModels;
+    window.sendChat = sendChat;
+    window.removeImage = removeImage;
+    window.toggleFilePanel = toggleFilePanel;
+    window.startVoiceInput = startVoiceInput;
   </script>
-  <script src="./debugger.js"></script>
 </body>
 </html>
