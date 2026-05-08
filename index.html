@@ -233,7 +233,7 @@
         
         <!-- Fetch Models Button -->
         <div class="flex gap-2">
-             <button onclick="fetchAvailableModels()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2">
+             <button onclick="fetchAvailableModels(event)" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2">
                 <i class="fa-solid fa-rotate"></i> Fetch Models
             </button>
         </div>
@@ -259,29 +259,39 @@
     };
 
     // --- INIT MONACO ---
-    require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs" } });
-    require(["vs/editor/editor.main"], () => {
-      editor = monaco.editor.create(document.getElementById("editor"), {
-        value: "// Select or Create a Project",
-        language: "javascript",
-        theme: "vs-dark",
-        automaticLayout: true,
-        fontSize: 14,
-        minimap: { enabled: false },
-        scrollBeyondLastLine: false,
-        wordWrap: 'on',
-        loadSavedModels();
-      });
+    require.config({
+    paths: {
+        vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs"
+    }
+});
 
-      editor.onDidChangeModelContent(() => {
-          if (currentFile && getActiveProject()) {
-              getActiveProject().files[currentFile] = editor.getValue();
-              triggerSave();
-          }
-      });
-      
-      initApp();
+require(["vs/editor/editor.main"], () => {
+
+    editor = monaco.editor.create(
+        document.getElementById("editor"),
+        {
+            value: "// Select or Create a Project",
+            language: "javascript",
+            theme: "vs-dark",
+            automaticLayout: true,
+            fontSize: 14,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            wordWrap: 'on'
+        }
+    );
+
+    loadSavedModels();
+
+    editor.onDidChangeModelContent(() => {
+        if (currentFile && getActiveProject()) {
+            getActiveProject().files[currentFile] = editor.getValue();
+            triggerSave();
+        }
     });
+
+    initApp();
+});
 
     // --- DATABASE & PROJECT CRUD ---
     function loadDB() {
@@ -404,9 +414,9 @@
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(saveDB, 1000);
     }
-    // --- MODEL LOADER (Fixes 404 Errors) ---
+    // --- MODEL LOADER ---
     
-    async function fetchAvailableModels() {
+    async function fetchAvailableModels(ev) {
         const apiKey = document.getElementById("apiKeyInput").value.trim();
         if (!apiKey) return alert("Please enter an API Key first.");
 
@@ -718,7 +728,7 @@ IMPORTANT RULES:
             if(!proj) return;
             
             Object.keys(proj.files).forEach(name => {
-                const btn = document.createElement("button");
+                const btn = ev.target.closest('button');
                 btn.className = `w-full px-4 py-3 text-left hover:bg-slate-800 active:bg-slate-700 flex items-center gap-3 text-sm truncate ${currentFile === name ? 'bg-slate-800 text-cyan-400' : ''}`;
                 btn.innerHTML = `<i class="fa-solid fa-file-code w-4 text-center opacity-60"></i><span class="truncate">${name.split('/').pop()}</span>`;
                 btn.onclick = () => {
@@ -849,7 +859,10 @@ IMPORTANT RULES:
       
       proj.context = ctx;
       saveDB(); // Save context to project
-      addMessage("ai", `Indexed ${entries.length} files. I can now see the full content.`);
+      appendMessageDOM(
+        "assistant",
+        `Indexed ${entries.length} files. I can now see the full content.`
+       );
     };
 
     document.getElementById("exportZipBtn").onclick = async () => {
@@ -894,8 +907,7 @@ IMPORTANT RULES:
         if (window.innerWidth < 1024) switchMainTab(1); // Start on Chat for mobile
         console.log("Mimo Ready.");
     }
-    
-    window.onload = initApp;
+
 
   </script>
   <script src="./debugger.js"></script>
