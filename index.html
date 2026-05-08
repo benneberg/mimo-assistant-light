@@ -699,7 +699,21 @@ if (metricsDiv) {
             document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
         }
     }
+const latency = Date.now() - start;
 
+aiMsgObj.content = fullContent;
+aiMsgObj.metadata.latency = latency;
+
+const metricsDiv = msgDom.querySelector('.font-mono');
+
+if (metricsDiv) {
+
+    metricsDiv.innerHTML = `
+        <span>${aiMsgObj.metadata.model || model}</span>
+        <span>${latency}ms</span>
+        <span>${fullContent.length} chars</span>
+    `;
+}
     function parseAndAddArtefacts(text, project) {
         const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
         let match;
