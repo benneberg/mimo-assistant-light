@@ -626,7 +626,15 @@ IMPORTANT RULES:
             
             // Add empty AI message to DOM to fill
             const aiMsgObj = { role: 'assistant', content: '', metadata: { model, latency: 0 } };
-            const msgDom = appendMessageDOM('assistant', '');
+            const msgDom = appendMessageDOM(
+    'assistant',
+    '',
+    {
+        model,
+        latency: 0,
+        tokens: 0
+    }
+);
             
             let fullContent = "";
             let buffer = "";
@@ -652,8 +660,17 @@ IMPORTANT RULES:
                             // Update DOM
                             const contentDiv = msgDom.querySelector('.whitespace-pre-wrap');
                             if (contentDiv) contentDiv.innerText = fullContent;
-                            
-                            // Auto scroll
+                            const metricsDiv = msgDom.querySelector('.font-mono');
+
+if (metricsDiv) {
+    metricsDiv.innerHTML = `
+        <span>${model}</span>
+        <span>${latency}ms</span>
+        <span>${fullContent.length} chars</span>
+    `;
+}
+                           const latency = Date.now() - start;
+                          // Auto scroll
                             const container = document.getElementById("chatMessages");
                             container.scrollTop = container.scrollHeight;
                         } catch(e) { /* ignore parsing errors in stream */ }
