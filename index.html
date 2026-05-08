@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#0f172a" />
   <title>Mimo Dev Assistant</title>
 
@@ -11,7 +10,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
 
@@ -45,11 +43,7 @@
       border-radius: 20px 20px 20px 4px; 
     }
 
-    .tab-active { 
-      border-bottom: 3px solid #22d3ee; 
-      color: white; 
-      font-weight: 600; 
-    }
+    .tab-active { border-bottom: 3px solid #22d3ee; color: white; font-weight: 600; }
 
     .artefact-card { animation: fadeInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
@@ -57,40 +51,19 @@
     .chat-container::-webkit-scrollbar { width: 6px; }
     .chat-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 20px; }
     
-    .touch-btn {
-      touch-action: manipulation;
-      user-select: none;
-    }
+    .touch-btn { touch-action: manipulation; user-select: none; }
+    .safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 
-    .safe-bottom {
-      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    /* Project Dropdown */
+    .dropdown-menu {
+      position: absolute; top: 100%; left: 0; right: auto;
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 12px; margin-top: 8px; z-index: 60;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none;
+      min-width: 250px;
     }
+    .dropdown-menu.show { display: block; }
 
-    .typing-indicator {
-      display: flex; gap: 4px; align-items: center; padding: 8px 0;
-    }
-    .typing-indicator span {
-      width: 8px; height: 8px; background: #94a3b8; border-radius: 50%;
-      animation: bounce 1.4s infinite ease-in-out both;
-    }
-    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-    
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1); }
-    }
-
-     /* Preview Modal */
-    #previewModal {
-      position: fixed; inset: 0; z-index: 2000;
-      background: rgba(0,0,0,0.9);
-      display: none; flex-direction: column;
-    }
-    #previewModal.active { display: flex; }
-    #previewFrame {
-      flex: 1; width: 100%; height: 100%; border: none; background: white;
-    }
   </style>
 </head>
 
@@ -98,16 +71,38 @@
 
   <!-- TOPBAR -->
   <header class="glass border-b border-slate-700 px-4 py-3 flex items-center justify-between z-50 flex-shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-2xl flex items-center justify-center text-slate-950 font-bold text-2xl">M</div>
-      <h1 class="title-font text-2xl sm:text-3xl font-semibold tracking-tighter">mimo</h1>
+    
+    <!-- Project Manager (Left) -->
+    <div class="relative">
+      <button id="projectToggle" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-xl text-sm font-medium transition-colors">
+        <i class="fa-solid fa-folder-tree text-cyan-400"></i>
+        <span id="currentProjectName" class="max-w-[100px] truncate">New Project</span>
+        <i class="fa-solid fa-chevron-down text-xs opacity-50"></i>
+      </button>
+      
+      <div id="projectDropdown" class="dropdown-menu glass">
+        <div class="p-2 border-b border-slate-700 text-xs text-slate-400 uppercase">Projects</div>
+        <div id="projectListContainer" class="max-h-60 overflow-auto"></div>
+        <div class="p-2 border-t border-slate-700">
+          <button onclick="createNewProject()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-700 text-sm text-emerald-400 flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> New Project
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="flex items-center gap-2 sm:gap-3">
-      <button id="indexBtn" class="touch-btn flex items-center gap-2 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 px-4 sm:px-5 py-2 rounded-2xl text-sm font-medium transition-colors">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 absolute left-1/2 transform -translate-x-1/2">
+       <div class="w-8 h-8 bg-gradient-to-br from-cyan-400 to-violet-500 rounded-xl flex items-center justify-center text-slate-950 font-bold text-xl">M</div>
+       <h1 class="title-font text-xl font-semibold tracking-tighter hidden sm:block">mimo</h1>
+    </div>
+
+    <!-- Actions (Right) -->
+    <div class="flex items-center gap-2">
+      <button id="indexBtn" class="touch-btn flex items-center gap-2 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 px-4 py-2 rounded-2xl text-sm font-medium transition-colors">
         <i class="fa-solid fa-bolt"></i> <span class="hidden sm:inline">Index</span>
       </button>
-      <button id="exportZipBtn" class="touch-btn flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 px-4 sm:px-5 py-2 rounded-2xl text-sm font-medium transition-colors">
+      <button id="exportZipBtn" class="touch-btn flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 px-4 py-2 rounded-2xl text-sm font-medium transition-colors">
         <i class="fa-solid fa-file-export"></i>
       </button>
       <button id="settingsBtn" class="touch-btn w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 rounded-2xl text-xl transition-colors">
@@ -180,7 +175,8 @@
                         class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-2xl px-4 py-3 pr-12 outline-none text-sm resize-none max-h-32 overflow-y-auto" 
                         placeholder="Ask Mimo..."></textarea>
               <div class="absolute right-2 bottom-2 flex flex-col gap-1">
-                 <button onclick="triggerImageUpload()" class="touch-btn w-8 h-8 bg-slate-800 hover:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-colors">
+                 <!-- Image Upload for Multimodal -->
+                 <button onclick="triggerImageUpload()" class="touch-btn w-8 h-8 bg-slate-800 hover:bg-slate-700 rounded-xl flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-colors" title="Upload Image for Vision">
                    <i class="fa-solid fa-image text-sm"></i>
                  </button>
               </div>
@@ -200,7 +196,7 @@
 
       <div id="artefactsView" class="flex-1 hidden overflow-auto p-4 bg-slate-950">
         <h3 class="text-lg font-medium mb-4 flex items-center gap-2 sticky top-0 bg-slate-950 py-2 z-10">
-          <i class="fa-solid fa-cube"></i> Artefacts &amp; Previews
+          <i class="fa-solid fa-cube"></i> Artefacts
         </h3>
         <div id="artefactsContainer" class="space-y-6"></div>
       </div>
@@ -223,7 +219,7 @@
   </div>
 
   <!-- Settings Modal -->
-  <div id="settingsModal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onclick="document.getElementById('settingsModal').classList.add('hidden')">
+  <div id="settingsModal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
     <div class="glass max-w-md w-full rounded-3xl p-6 border border-slate-600 relative" onclick="event.stopPropagation()">
       <button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl touch-btn">&times;</button>
       <h2 class="text-2xl font-semibold mb-6">Settings</h2>
@@ -232,45 +228,30 @@
           <label class="block text-sm text-slate-400 mb-2">API Key</label>
           <input id="apiKeyInput" type="password" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:border-cyan-400" placeholder="sk-...">
         </div>
-        <div class="flex justify-between items-center">
-          <span>Save in browser</span>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input id="saveLocalToggle" type="checkbox" checked class="sr-only peer">
-            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-          </label>
-        </div>
         <button id="saveSettingsBtn" class="touch-btn w-full py-4 bg-white text-black rounded-2xl font-semibold hover:bg-slate-200 transition-colors">Save Settings</button>
       </div>
     </div>
   </div>
 
-  <!-- Preview Modal (Fullscreen) -->
-  <div id="previewModal">
-    <div class="bg-slate-900 p-2 flex justify-between items-center z-10">
-        <span class="text-xs text-slate-400 px-2">Live Preview</span>
-        <button onclick="closePreviewModal()" class="touch-btn bg-red-500/20 text-red-400 px-4 py-1 rounded-lg text-sm font-semibold">
-            <i class="fa-solid fa-xmark mr-1"></i> Close
-        </button>
-    </div>
-    <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals"></iframe>
-  </div>
-
-  
-  <!-- SCRIPTS -->
   <script>
+    // --- STATE MANAGEMENT ---
     let editor, currentFile = null;
-    const projectFiles = {};
-    let projectContext = ""; // This will hold the indexed text
-    let artefacts = [];
     let attachedImage = null;
     let currentMainTab = 0;
     let saveTimeout;
+    
+    // Database Structure in LocalStorage:
+    // 'mimo_db': { activeId: 'uuid', projects: { 'uuid': { name, files:{}, context:'', messages:[] } } }
+    let db = {
+        activeId: null,
+        projects: {}
+    };
 
-    // Monaco Loader
+    // --- INIT MONACO ---
     require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs" } });
     require(["vs/editor/editor.main"], () => {
       editor = monaco.editor.create(document.getElementById("editor"), {
-        value: "// Upload a ZIP or start chatting",
+        value: "// Select or Create a Project",
         language: "javascript",
         theme: "vs-dark",
         automaticLayout: true,
@@ -281,49 +262,438 @@
       });
 
       editor.onDidChangeModelContent(() => {
-          if (currentFile) {
-              projectFiles[currentFile] = editor.getValue();
+          if (currentFile && getActiveProject()) {
+              getActiveProject().files[currentFile] = editor.getValue();
               triggerSave();
           }
       });
+      
+      initApp();
     });
 
-    // --- Persistence ---
-    function triggerSave() {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(saveProject, 1000);
-    }
-
-    function saveProject() {
-        try {
-            localStorage.setItem('mimo_project', JSON.stringify(projectFiles));
-        } catch (e) {
-            console.warn("Storage full", e);
-        }
-    }
-
-    function loadProject() {
-        const saved = localStorage.getItem('mimo_project');
+    // --- DATABASE & PROJECT CRUD ---
+    function loadDB() {
+        const saved = localStorage.getItem('mimo_db');
         if (saved) {
             try {
-                const files = JSON.parse(saved);
-                if (Object.keys(files).length > 0) {
-                    for (let k in files) projectFiles[k] = files[k];
-                    document.getElementById("fileCount").textContent = `${Object.keys(projectFiles).length} files (Restored)`;
-                    renderFileList();
-                    const firstName = Object.keys(projectFiles)[0];
-                    if (firstName) {
-                        currentFile = firstName;
-                        if(editor) editor.setValue(projectFiles[firstName]);
-                    }
-                }
-            } catch(e) {
-                localStorage.removeItem('mimo_project');
-            }
+                const parsed = JSON.parse(saved);
+                db = parsed;
+                return;
+            } catch(e) { console.error("Corrupted DB", e); }
+        } 
+        // Create default project if none exists
+        createNewProject("New Project", true);
+    }
+
+    function saveDB() {
+        try {
+            localStorage.setItem('mimo_db', JSON.stringify(db));
+        } catch(e) {
+            alert("Storage Full! Please export and delete some projects.");
         }
     }
 
-    // Tab Switching
+    function getActiveProject() {
+        return db.projects[db.activeId];
+    }
+
+    function createNewProject(name = "Untitled", isInit = false) {
+        const id = 'p_' + Date.now();
+        const proj = {
+            id: id,
+            name: name,
+            files: {},
+            context: "",
+            messages: [], // Chat History
+            artefacts: []
+        };
+        db.projects[id] = proj;
+        db.activeId = id;
+        saveDB();
+        if (!isInit) {
+            switchProject(id);
+            renderProjectDropdown();
+        }
+        return proj;
+    }
+
+    function switchProject(id) {
+        if (!db.projects[id]) return;
+        db.activeId = id;
+        saveDB();
+        
+        // Reset UI
+        currentFile = null;
+        attachedImage = null;
+        
+        // Load Files
+        renderFileList();
+        const proj = getActiveProject();
+        const firstFile = Object.keys(proj.files)[0];
+        if (firstFile) {
+            currentFile = firstFile;
+            editor.setValue(proj.files[firstFile]);
+        } else {
+            editor.setValue("// Empty Project");
+        }
+        
+        // Load Chat
+        renderChatHistory();
+        renderArtefacts();
+        
+        // Update Header
+        document.getElementById('currentProjectName').textContent = proj.name;
+        closeDropdowns();
+    }
+
+    function deleteProject(id) {
+        if (Object.keys(db.projects).length <= 1) return alert("Cannot delete the last project.");
+        if (confirm("Delete this project and all its files?")) {
+            delete db.projects[id];
+            if (db.activeId === id) {
+                db.activeId = Object.keys(db.projects)[0];
+            }
+            saveDB();
+            switchProject(db.activeId);
+            renderProjectDropdown();
+        }
+    }
+
+    function renderProjectDropdown() {
+        const container = document.getElementById('projectListContainer');
+        container.innerHTML = '';
+        
+        Object.values(db.projects).forEach(p => {
+            const isActive = p.id === db.activeId;
+            const div = document.createElement('div');
+            div.className = `flex items-center justify-between px-3 py-2 rounded-lg m-1 ${isActive ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-slate-700'}`;
+            div.innerHTML = `
+                <span class="truncate text-sm cursor-pointer flex-1" onclick="switchProject('${p.id}')">${p.name}</span>
+                <div class="flex gap-2 items-center">
+                    <button onclick="event.stopPropagation(); renameProject('${p.id}')" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="event.stopPropagation(); deleteProject('${p.id}')" class="text-red-500 hover:text-red-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function renameProject(id) {
+        const newName = prompt("Enter new project name:", db.projects[id].name);
+        if (newName) {
+            db.projects[id].name = newName;
+            saveDB();
+            renderProjectDropdown();
+            if (id === db.activeId) document.getElementById('currentProjectName').textContent = newName;
+        }
+    }
+
+    function triggerSave() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveDB, 1000);
+    }
+
+    // --- CHAT LOGIC (Streaming) ---
+    
+    function renderChatHistory() {
+        const container = document.getElementById("chatMessages");
+        container.innerHTML = ''; // Clear current
+        const proj = getActiveProject();
+        if (!proj) return;
+
+        proj.messages.forEach(msg => {
+            // We don't re-render the thinking indicator or stream, just final messages
+            if (msg.role === 'user' || msg.role === 'assistant') {
+                appendMessageDOM(msg.role, msg.content, msg.metadata, false);
+            }
+        });
+        
+        setTimeout(() => container.scrollTo({ top: container.scrollHeight, behavior: "smooth" }), 50);
+    }
+
+    // Helper to just add DOM elements (used by history loader and live stream)
+    function appendMessageDOM(role, content, metadata = null, scroll = true) {
+        const container = document.getElementById("chatMessages");
+        const div = document.createElement("div");
+        div.className = `flex ${role === "user" ? "justify-end" : "justify-start"} items-end gap-2`;
+        
+        // Basic HTML construction
+        let html = `<div class="${role === "user" ? "message-user" : "message-ai"} max-w-[90%] sm:max-w-[85%] px-4 py-2.5 text-sm sm:text-base">`;
+        
+        // Handle images for User messages
+        if (role === 'user' && content.image) {
+             html += `<img src="${content.image}" class="mb-2 max-h-32 rounded-lg">`;
+             if (!content.text) { html += `<div class="text-xs opacity-70">Image attached</div>`; }
+        }
+        
+        const textContent = (typeof content === 'string') ? content : content.text;
+        html += `<div class="whitespace-pre-wrap break-words">${escapeHtml(textContent || "")}</div>`;
+
+        if (metadata && document.getElementById("showMetrics").checked) {
+            const lat = metadata.latency ? `${metadata.latency}ms` : '';
+            const tok = metadata.tokens ? `${metadata.tokens} tok` : '';
+            html += `<div class="text-[10px] mt-2 pt-2 border-t border-slate-600/30 font-mono flex justify-between text-slate-400 opacity-70">
+              <span>${metadata.model}</span><span>${lat}</span><span>${tok}</span>
+            </div>`;
+        }
+        html += `</div>`;
+        div.innerHTML = html;
+        container.appendChild(div);
+        
+        if (scroll) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+        return div;
+    }
+
+    // STREAMING IMPLEMENTATION
+    async function sendChat() {
+        const promptEl = document.getElementById("promptInput");
+        const prompt = promptEl.value.trim();
+        if (!prompt && !attachedImage) return;
+
+        const model = document.getElementById("modelSelect").value;
+        const proj = getActiveProject();
+        if (!proj) return;
+
+        // 1. Construct User Message Object
+        const userMessage = { role: "user", content: { text: prompt, image: attachedImage } };
+        
+        // Save User Message immediately
+        proj.messages.push(userMessage);
+        saveDB();
+        
+        // Render User Message
+        appendMessageDOM('user', userMessage.content);
+        
+        promptEl.value = "";
+        removeImage();
+        document.getElementById("sendBtn").disabled = true;
+        document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        // 2. Prepare API Payload
+        const apiKey = localStorage.getItem("mimo_api_key");
+        if (!apiKey) return alert("Add API Key in Settings.");
+
+        const start = Date.now();
+        
+        // System Prompt
+        let systemContent = "You are Mimo. Use the provided context to help.";
+        if (proj.context) systemContent += "\n\nPROJECT FILES:\n" + proj.context;
+
+        // History Context (simple last N messages to save tokens)
+        const history = proj.messages.slice(-10).map(m => {
+            if (m.role === 'user') {
+                if (m.content.image) return { role: 'user', content: [ {type:'text', text: m.content.text || "Image"}, {type:'image_url', image_url: {url: m.content.image}} ] };
+                return { role: 'user', content: m.content.text || "" };
+            }
+            return { role: 'assistant', content: m.content };
+        });
+
+        try {
+            const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json", 
+                    "Authorization": `Bearer ${apiKey}` 
+                },
+                body: JSON.stringify({ 
+                    model, 
+                    messages: [
+                        { role: "system", content: systemContent },
+                        ...history
+                    ], 
+                    stream: true, // ENABLE STREAMING
+                    temperature: 0.5 
+                })
+            });
+
+            if (!res.ok) throw new Error(`API Error ${res.status}`);
+
+            // 3. Handle Stream
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            
+            // Add empty AI message to DOM to fill
+            const aiMsgObj = { role: 'assistant', content: '', metadata: { model, latency: 0 } };
+            const msgDom = appendMessageDOM('assistant', '');
+            
+            let fullContent = "";
+            let buffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop(); // Keep incomplete line
+
+                for (const line of lines) {
+                    if (line.startsWith("data: ")) {
+                        const jsonStr = line.slice(6);
+                        if (jsonStr === "[DONE]") break;
+                        
+                        try {
+                            const data = JSON.parse(jsonStr);
+                            const token = data.choices?.[0]?.delta?.content || "";
+                            fullContent += token;
+                            
+                            // Update DOM
+                            const contentDiv = msgDom.querySelector('.whitespace-pre-wrap');
+                            if (contentDiv) contentDiv.innerText = fullContent;
+                            
+                            // Auto scroll
+                            const container = document.getElementById("chatMessages");
+                            container.scrollTop = container.scrollHeight;
+                        } catch(e) { /* ignore parsing errors in stream */ }
+                    }
+                }
+            }
+
+            // 4. Finalize
+            const latency = Date.now() - start;
+            aiMsgObj.content = fullContent;
+            aiMsgObj.metadata.latency = latency;
+            
+            // Save to history
+            proj.messages.push(aiMsgObj);
+            saveDB();
+            
+            // Check for Artefacts (Code Blocks)
+            parseAndAddArtefacts(fullContent, proj);
+
+        } catch (e) {
+            alert("Error: " + e.message);
+            proj.messages.push({ role: 'assistant', content: "Error: " + e.message });
+            saveDB();
+        } finally {
+            document.getElementById("sendBtn").disabled = false;
+            document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+        }
+    }
+
+    function parseAndAddArtefacts(text, project) {
+        const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+        let match;
+        while ((match = codeBlockRegex.exec(text)) !== null) {
+            const lang = match[1] || 'code';
+            const code = match[2].trim();
+            // Add to project artefacts
+            project.artefacts = project.artefacts || [];
+            project.artefacts.unshift({ type: "code", content: code, lang: lang });
+            saveDB();
+        }
+        renderArtefacts();
+    }
+
+    // --- FILE LOGIC ---
+    
+    document.getElementById("zipInput").addEventListener("change", async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const zip = await JSZip.loadAsync(file);
+        const proj = getActiveProject();
+        if(!proj) return;
+
+        proj.files = {}; // Clear current files in project
+        
+        for (const name in zip.files) {
+            if (zip.files[name].dir) continue;
+            proj.files[name] = await zip.files[name].async("string");
+        }
+        
+        saveDB();
+        renderFileList();
+        switchMainTab(0); // Go to editor
+        e.target.value = '';
+    });
+
+    function renderFileList() {
+        const proj = getActiveProject();
+        const count = proj ? Object.keys(proj.files).length : 0;
+        document.getElementById("fileCount").textContent = `${count} files`;
+        
+        ["fileList", "drawerFileList"].forEach(id => {
+            const el = document.getElementById(id);
+            el.innerHTML = "";
+            if(!proj) return;
+            
+            Object.keys(proj.files).forEach(name => {
+                const btn = document.createElement("button");
+                btn.className = `w-full px-4 py-3 text-left hover:bg-slate-800 active:bg-slate-700 flex items-center gap-3 text-sm truncate ${currentFile === name ? 'bg-slate-800 text-cyan-400' : ''}`;
+                btn.innerHTML = `<i class="fa-solid fa-file-code w-4 text-center opacity-60"></i><span class="truncate">${name.split('/').pop()}</span>`;
+                btn.onclick = () => {
+                    currentFile = name;
+                    editor.setValue(proj.files[name]);
+                    monaco.editor.setModelLanguage(editor.getModel(), getLang(name));
+                    if (window.innerWidth < 1024) toggleFilePanel();
+                    renderFileList();
+                };
+                el.appendChild(btn);
+            });
+        });
+    }
+
+    function renderArtefacts() {
+        const container = document.getElementById("artefactsContainer");
+        const proj = getActiveProject();
+        const items = (proj && proj.artefacts) ? proj.artefacts : [];
+        
+        container.innerHTML = items.length === 0 ? `<p class="text-center text-slate-500 py-20">No artefacts yet.</p>` : "";
+        
+        items.forEach((a, i) => {
+             if(a.type === 'code') {
+                 const div = document.createElement('div');
+                 div.className = "bg-slate-900 rounded-xl p-2";
+                 div.innerHTML = `<div class="text-xs text-cyan-400 mb-1">Artefact: ${a.lang}</div><pre class="text-xs overflow-auto max-h-40">${escapeHtml(a.content)}</pre>`;
+                 container.appendChild(div);
+             }
+        });
+    }
+
+    // --- HELPERS ---
+    
+    function escapeHtml(text) {
+      return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function getLang(filename) {
+      if (filename.endsWith('.html')) return 'html';
+      if (filename.endsWith('.css')) return 'css';
+      if (filename.endsWith('.json')) return 'json';
+      return 'javascript';
+    }
+
+    function triggerImageUpload() { document.getElementById("imageInput").click(); }
+    
+    document.getElementById("imageInput").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        attachedImage = ev.target.result;
+        document.getElementById("previewImg").src = attachedImage;
+        document.getElementById("imagePreview").classList.remove("hidden");
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+
+    function removeImage() {
+      attachedImage = null;
+      document.getElementById("imagePreview").classList.add("hidden");
+    }
+    
+    function startVoiceInput() {
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Speech) return alert("Voice not supported");
+      const rec = new Speech();
+      rec.lang = "en-US";
+      rec.onresult = e => document.getElementById("promptInput").value = e.results[0][0].transcript;
+      rec.start();
+    }
+
+    // --- UI CONTROLS ---
+
     function switchMainTab(tab) {
       currentMainTab = tab;
       const editorPanel = document.getElementById("panel-editor");
@@ -350,353 +720,81 @@
       document.getElementById("artefactsView").classList.toggle("hidden", tab !== 1);
     }
 
-    // Message Logic
-    function addMessage(role, content, metadata = null, isThinking = false) {
-      const container = document.getElementById("chatMessages");
-      const div = document.createElement("div");
-      div.className = `flex ${role === "user" ? "justify-end" : "justify-start"} items-end gap-2`;
-      
-      let html = `<div class="${role === "user" ? "message-user" : "message-ai"} max-w-[90%] sm:max-w-[85%] px-4 py-2.5 text-sm sm:text-base">`;
-      
-      if (role === "user" && attachedImage) {
-        html += `<img src="${attachedImage}" class="mb-2 max-h-32 rounded-lg">`;
-      }
-      
-      if (isThinking) {
-          html += `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
-          div.setAttribute('id', 'thinking-msg');
-      } else {
-          html += `<div class="whitespace-pre-wrap break-words">${escapeHtml(content)}</div>`;
-      }
-
-      // Only show metadata if it exists (fix for 'undefinedms')
-      if (metadata && document.getElementById("showMetrics").checked) {
-        const lat = metadata.latency ? `${metadata.latency}ms` : '';
-        const tok = metadata.tokens ? `${metadata.tokens} tok` : '? tok';
-        html += `<div class="text-[10px] mt-2 pt-2 border-t border-slate-600/30 font-mono flex justify-between text-slate-400 opacity-70">
-          <span>${metadata.model}</span><span>${lat}</span><span>${tok}</span>
-        </div>`;
-      }
-      html += `</div>`;
-      div.innerHTML = html;
-      container.appendChild(div);
-      
-      setTimeout(() => {
-        container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-      }, 50);
-      
-      return div;
+    function toggleFilePanel() {
+      document.getElementById("fileDrawer").classList.toggle("hidden");
     }
-
-    function removeThinking() {
-        const el = document.getElementById('thinking-msg');
-        if (el) el.remove();
-    }
-
-    function escapeHtml(text) {
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function renderArtefacts() {
-      const container = document.getElementById("artefactsContainer");
-      container.innerHTML = artefacts.length === 0 ? 
-        `<p class="text-center text-slate-500 py-20">No artefacts yet.</p>` : "";
-
-      const artefactTabBtn = document.getElementById('mainTab2');
-      if (artefactTabBtn && artefacts.length > 0) {
-          artefactTabBtn.innerHTML = `Artefacts (${artefacts.length})`;
-      }
-
-      artefacts.forEach((artefact, i) => {
-        const div = document.createElement("div");
-        div.className = "artefact-card bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden";
-        if (artefact.type === "image") {
-          div.innerHTML = `<img src="${artefact.url}" class="w-full h-64 object-cover"><div class="p-4 text-xs font-mono opacity-70">${artefact.name}</div>`;
-        } else if (artefact.type === "code") {
-          const lang = artefacts[i].lang || 'html';
-          div.innerHTML = `
-            <div class="p-3 bg-slate-950 border-b border-slate-700 text-xs text-cyan-400 font-mono flex justify-between items-center">
-              <span>Code Snippet (${lang})</span>
-              <div class="flex gap-2">
-                <button onclick="copyArtefact(${i})" class="touch-btn bg-slate-700/50 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded"><i class="fa-regular fa-copy"></i></button>
-                <button onclick="previewCode(${i})" class="touch-btn bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-3 py-1 rounded-lg"><i class="fa-solid fa-play mr-1"></i> Preview</button>
-              </div>
-            </div>
-            <pre class="p-4 text-xs overflow-auto max-h-60 font-mono bg-slate-950/50">${escapeHtml(artefact.content)}</pre>`;
-        }
-        container.appendChild(div);
-      });
-    }
-
-    window.copyArtefact = function(i) {
-        const a = artefacts[i];
-        if (a) navigator.clipboard.writeText(a.content);
-    }
-
-    window.previewCode = function(i) {
-      const a = artefacts[i];
-      if (a && a.type === "code") {
-        const modal = document.getElementById('previewModal');
-        const frame = document.getElementById('previewFrame');
-        const doc = frame.contentDocument || frame.contentWindow.document;
-        doc.open();
-        doc.write(a.content);
-        doc.close();
-        modal.classList.add('active');
-      }
-    };
-
-    window.closePreviewModal = function() {
-        document.getElementById('previewModal').classList.remove('active');
-    }
-
-    // Image & Voice
-    function triggerImageUpload() { document.getElementById("imageInput").click(); }
     
-    document.getElementById("imageInput").addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        attachedImage = ev.target.result;
-        document.getElementById("previewImg").src = attachedImage;
-        document.getElementById("imagePreview").classList.remove("hidden");
-      };
-      reader.readAsDataURL(file);
-      e.target.value = ''; 
-    });
-
-    function removeImage() {
-      attachedImage = null;
-      document.getElementById("imagePreview").classList.add("hidden");
+    function closeDropdowns() {
+        document.getElementById('projectDropdown').classList.remove('show');
     }
 
-    function startVoiceInput() {
-      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!Speech) return alert("Voice not supported");
-      const rec = new Speech();
-      rec.lang = "en-US";
-      rec.onresult = e => {
-          document.getElementById("promptInput").value = e.results[0][0].transcript;
-          document.getElementById("promptInput").focus();
-      };
-      rec.start();
-    }
-
-    // Send Message
-    document.getElementById("sendBtn").onclick = async () => {
-      const prompt = document.getElementById("promptInput").value.trim();
-      if (!prompt && !attachedImage) return;
-
-      const model = document.getElementById("modelSelect").value;
-      
-      addMessage("user", prompt || "[Image]", { model });
-      document.getElementById("promptInput").value = "";
-      removeImage(); 
-
-      const apiKey = localStorage.getItem("mimo_api_key");
-      if (!apiKey) return addMessage("ai", "Missing API Key. Click Settings.");
-
-      const start = Date.now();
-      document.getElementById("sendBtn").disabled = true;
-      document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-      addMessage("ai", "", null, true);
-
-      try {
-        let messages = [{ role: "user", content: prompt || "Describe this image" }];
-        
-        // System Prompt Construction
-        let systemContent = "You are Mimo, a helpful dev assistant. When asked to create code, output it in a markdown code block.";
-        
-        // *** FIX: Inject Context ***
-        if (projectContext) {
-            systemContent += "\n\n--- PROJECT CONTEXT ---\nThe user has uploaded the following project files. Use this context to answer questions.\n" + projectContext;
-        }
-
-        const systemPrompt = { role: "system", content: systemContent };
-
-        if (attachedImage) {
-          messages[0].content = [
-            { type: "text", text: prompt || "Help with this image" },
-            { type: "image_url", image_url: { url: attachedImage } }
-          ];
-        }
-
-        const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-          body: JSON.stringify({ model, messages: [systemPrompt, ...messages], temperature: 0.4 })
-        });
-
-        if (!res.ok) throw new Error(`API Error: ${res.status}`);
-        
-        const data = await res.json();
-        const text = data.choices?.[0]?.message?.content || "No response";
-
-        removeThinking();
-
-        let cleanText = text;
-        const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-        let match;
-        
-        while ((match = codeBlockRegex.exec(text)) !== null) {
-            const lang = match[1] || 'code';
-            const code = match[2];
-            artefacts.unshift({ type: "code", content: code.trim(), lang: lang });
-            cleanText = cleanText.replace(match[0], ""); 
-        }
-
-        if (cleanText.trim() === "" && artefacts.length > 0) {
-            cleanText = "Here is the code I generated for you.";
-        }
-
-        addMessage("ai", cleanText.trim(), { model, latency: Date.now() - start, tokens: data.usage?.total_tokens });
-        renderArtefacts();
-
-      } catch (e) {
-        removeThinking();
-        addMessage("ai", "Error: " + e.message);
-      } finally {
-        document.getElementById("sendBtn").disabled = false;
-        document.getElementById("sendBtn").innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
-      }
+    // --- EVENT LISTENERS ---
+    
+    document.getElementById("projectToggle").onclick = (e) => {
+        e.stopPropagation();
+        document.getElementById('projectDropdown').classList.toggle('show');
     };
-
-    // ZIP & Files Logic
-    document.getElementById("zipInput").addEventListener("change", async e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const zip = await JSZip.loadAsync(file);
-      
-      for (const key in projectFiles) delete projectFiles[key];
-      
-      for (const name in zip.files) {
-        if (zip.files[name].dir) continue;
-        projectFiles[name] = await zip.files[name].async("string");
-      }
-      
-      document.getElementById("fileCount").textContent = `${Object.keys(projectFiles).length} files`;
-      renderFileList();
-      addMessage("ai", `Loaded ${Object.keys(projectFiles).length} files. Click "Index" to make me aware of their contents.`);
-      
-      saveProject();
-      e.target.value = '';
-    });
-
-    function renderFileList() {
-      ["fileList", "drawerFileList"].forEach(id => {
-        const el = document.getElementById(id);
-        el.innerHTML = "";
-        Object.keys(projectFiles).forEach(name => {
-          const btn = document.createElement("button");
-          btn.className = `w-full px-4 py-3 text-left hover:bg-slate-800 active:bg-slate-700 flex items-center gap-3 text-sm truncate ${currentFile === name ? 'bg-slate-800 text-cyan-400' : ''}`;
-          btn.innerHTML = `<i class="fa-solid fa-file-code w-4 text-center opacity-60"></i><span class="truncate">${name.split('/').pop()}</span>`;
-          btn.onclick = () => {
-            currentFile = name;
-            editor.setValue(projectFiles[name]);
-            monaco.editor.setModelLanguage(editor.getModel(), getLang(name));
-            if (window.innerWidth < 1024) {
-              toggleFilePanel(); 
-              switchMainTab(0); 
-            }
-            renderFileList();
-          };
-          el.appendChild(btn);
-        });
-      });
-    }
-
-    function getLang(filename) {
-      if (filename.endsWith('.html')) return 'html';
-      if (filename.endsWith('.css')) return 'css';
-      if (filename.endsWith('.json')) return 'json';
-      return 'javascript';
-    }
+    
+    document.addEventListener('click', closeDropdowns);
 
     document.getElementById("indexBtn").onclick = () => {
+      const proj = getActiveProject();
+      if(!proj) return;
       let ctx = "";
-      const entries = Object.entries(projectFiles);
-      if (entries.length === 0) return addMessage("ai", "No files to index. Upload a ZIP.");
+      const entries = Object.entries(proj.files);
+      if (entries.length === 0) return alert("No files.");
       
-      entries.slice(0, 40).forEach(([n, c]) => ctx += `FILE: ${n}\n${c.slice(0, 2000)}\n---\n`); // Increased slice for better context
-      projectContext = ctx;
-      
-      // Save context to localStorage so it persists
-      try {
-          localStorage.setItem('mimo_project_context', ctx);
-      } catch(e) {}
-      
-      addMessage("ai", `Indexed ${entries.length} files. I am now aware of the project structure and content.`);
+      entries.slice(0, 20).forEach(([n, c]) => ctx += `FILE: ${n}\n${c.slice(0, 2000)}\n---\n`);
+      proj.context = ctx;
+      saveDB();
+      alert(`Indexed ${entries.length} files.`);
     };
 
     document.getElementById("exportZipBtn").onclick = async () => {
-      if (currentFile && editor) projectFiles[currentFile] = editor.getValue();
+      const proj = getActiveProject();
+      if (!proj) return;
+      
       const zip = new JSZip();
-      Object.entries(projectFiles).forEach(([n, c]) => zip.file(n, c));
+      Object.entries(proj.files).forEach(([n, c]) => zip.file(n, c));
       const blob = await zip.generateAsync({ type: "blob" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "mimo_project.zip";
+      a.download = `${proj.name}.zip`;
       a.click();
-      addMessage("ai", "Project exported.");
     };
 
     document.getElementById("settingsBtn").onclick = () => document.getElementById("settingsModal").classList.remove("hidden");
     document.getElementById("saveSettingsBtn").onclick = () => {
-      const key = document.getElementById("apiKeyInput").value.trim();
-      if (key) localStorage.setItem("mimo_api_key", key);
-      alert("Settings Saved");
+      localStorage.setItem("mimo_api_key", document.getElementById("apiKeyInput").value.trim());
       document.getElementById("settingsModal").classList.add("hidden");
     };
-
-    function toggleFilePanel() {
-      document.getElementById("fileDrawer").classList.toggle("hidden");
-    }
 
     const txt = document.getElementById("promptInput");
     txt.addEventListener("input", () => {
       txt.style.height = 'auto';
       txt.style.height = (txt.scrollHeight) + 'px';
     });
-    
     txt.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) { 
-        e.preventDefault(); 
-        document.getElementById("sendBtn").click(); 
-      }
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
     });
+    document.getElementById("sendBtn").onclick = sendChat;
 
-    // Init
-    window.onload = () => {
-      if (localStorage.getItem("mimo_api_key")) {
-        document.getElementById("apiKeyInput").value = localStorage.getItem("mimo_api_key");
-      }
-      
-      // Restore context
-      const savedCtx = localStorage.getItem('mimo_project_context');
-      if (savedCtx) projectContext = savedCtx;
-      
-      if (window.innerWidth < 1024) {
-        switchMainTab(0); 
-      }
-      
-      loadProject();
-      
-      setTimeout(() => {
-        addMessage("ai", "Welcome back! I've restored your last session. What would you like to build?");
-      }, 300);
-    };
-
-    window.addEventListener('resize', () => {
-      switchMainTab(currentMainTab);
-    });
+    // INIT
+    function initApp() {
+        loadDB();
+        switchProject(db.activeId);
+        renderProjectDropdown();
+        
+        if (localStorage.getItem("mimo_api_key")) {
+            document.getElementById("apiKeyInput").value = localStorage.getItem("mimo_api_key");
+        }
+        
+        if (window.innerWidth < 1024) switchMainTab(1); // Start on Chat for mobile
+        console.log("Mimo Ready.");
+    }
     
+    window.onload = initApp;
+
   </script>
   <script src="./debugger.js"></script>
 </body>
