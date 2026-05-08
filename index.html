@@ -149,11 +149,13 @@
       
       <div id="chatView" class="flex-1 flex flex-col min-h-0 overflow-hidden">
         
-        <div class="p-3 glass border-b border-slate-700 flex gap-3 items-center flex-shrink-0">
+                <div class="p-3 glass border-b border-slate-700 flex gap-3 items-center flex-shrink-0">
           <select id="modelSelect" class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2 text-sm appearance-none cursor-pointer">
-            <option value="mimo-v2.5-pro">mimo-v2.5-pro (Vision)</option>
-            <option value="mimo-v2.5">mimo-v2.5</option>
-            <option value="mimo-v2-pro">mimo-v2-pro</option>
+            <!-- Correct Model IDs from Xiaomi Docs -->
+            <option value="MiMo-V2.5-Pro">MiMo-V2.5-Pro (Vision)</option>
+            <option value="MiMo-V2.5">MiMo-V2.5</option>
+            <option value="MiMo-V2-Pro">MiMo-V2-Pro</option>
+            <option value="MiMo-V2-Omni">MiMo-V2-Omni</option>
           </select>
           <label class="hidden sm:flex items-center gap-2 text-xs cursor-pointer">
             <input type="checkbox" id="showMetrics" checked class="accent-cyan-400 w-4 h-4">
@@ -793,7 +795,7 @@ IMPORTANT RULES:
 
     // --- UI CONTROLS ---
 
-    function switchMainTab(tab) {
+    eindow.switchMainTab =function(tab) {
       currentMainTab = tab;
       const editorPanel = document.getElementById("panel-editor");
       const chatPanel = document.getElementById("panel-chat");
@@ -837,16 +839,19 @@ IMPORTANT RULES:
     document.addEventListener('click', closeDropdowns);
 
     document.getElementById("indexBtn").onclick = () => {
-      const proj = getActiveProject();
+      const proj = getActiveProject(); // Or however you access your project state
       if(!proj) return;
+      
       let ctx = "";
       const entries = Object.entries(proj.files);
-      if (entries.length === 0) return alert("No files.");
+      if (entries.length === 0) return alert("No files to index. Upload a ZIP.");
       
-      entries.slice(0, 20).forEach(([n, c]) => ctx += `FILE: ${n}\n${c.slice(0, 2000)}\n---\n`);
+      // CHANGED: Slicing to 30000 chars per file so AI sees the whole code
+      entries.slice(0, 40).forEach(([n, c]) => ctx += `FILE: ${n}\n${c.slice(0, 30000)}\n---\n`);
+      
       proj.context = ctx;
-      saveDB();
-      alert(`Indexed ${entries.length} files.`);
+      saveDB(); // Save context to project
+      addMessage("ai", `Indexed ${entries.length} files. I can now see the full content.`);
     };
 
     document.getElementById("exportZipBtn").onclick = async () => {
