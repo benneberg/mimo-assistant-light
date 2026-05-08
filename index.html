@@ -600,10 +600,10 @@ IMPORTANT RULES:
     try {
         const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json", 
-                "Authorization": `Bearer ${apiKey}` 
-            },
+            headers: {
+  "Content-Type": "application/json",
+  "Authorization": `Bearer ${apiKey}`
+},
             body: JSON.stringify({ 
                 model, 
                 messages: [
@@ -611,7 +611,8 @@ IMPORTANT RULES:
                     ...history
                 ], 
                 stream: true,
-                temperature: 0.5 
+                temperature: 0.5,
+                max_completion_tokens: 2048
             })
         });
 
