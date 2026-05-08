@@ -718,30 +718,55 @@ IMPORTANT RULES:
     });
 
     function renderFileList() {
-        const proj = getActiveProject();
-        const count = proj ? Object.keys(proj.files).length : 0;
-        document.getElementById("fileCount").textContent = `${count} files`;
-        
-        ["fileList", "drawerFileList"].forEach(id => {
-            const el = document.getElementById(id);
-            el.innerHTML = "";
-            if(!proj) return;
-            
-            Object.keys(proj.files).forEach(name => {
-                const btn = ev.target.closest('button');
-                btn.className = `w-full px-4 py-3 text-left hover:bg-slate-800 active:bg-slate-700 flex items-center gap-3 text-sm truncate ${currentFile === name ? 'bg-slate-800 text-cyan-400' : ''}`;
-                btn.innerHTML = `<i class="fa-solid fa-file-code w-4 text-center opacity-60"></i><span class="truncate">${name.split('/').pop()}</span>`;
-                btn.onclick = () => {
-                    currentFile = name;
-                    editor.setValue(proj.files[name]);
-                    monaco.editor.setModelLanguage(editor.getModel(), getLang(name));
-                    if (window.innerWidth < 1024) toggleFilePanel();
-                    renderFileList();
-                };
-                el.appendChild(btn);
-            });
+    const proj = getActiveProject();
+    const count = proj ? Object.keys(proj.files).length : 0;
+
+    document.getElementById("fileCount").textContent = `${count} files`;
+
+    ["fileList", "drawerFileList"].forEach(id => {
+
+        const el = document.getElementById(id);
+        el.innerHTML = "";
+
+        if (!proj) return;
+
+        Object.keys(proj.files).forEach(name => {
+
+            const btn = document.createElement("button");
+
+            btn.className =
+                `w-full px-4 py-3 text-left hover:bg-slate-800 active:bg-slate-700 flex items-center gap-3 text-sm truncate ${
+                    currentFile === name
+                        ? 'bg-slate-800 text-cyan-400'
+                        : ''
+                }`;
+
+            btn.innerHTML =
+                `<i class="fa-solid fa-file-code w-4 text-center opacity-60"></i>
+                 <span class="truncate">${name.split('/').pop()}</span>`;
+
+            btn.onclick = () => {
+
+                currentFile = name;
+
+                editor.setValue(proj.files[name]);
+
+                monaco.editor.setModelLanguage(
+                    editor.getModel(),
+                    getLang(name)
+                );
+
+                if (window.innerWidth < 1024) {
+                    toggleFilePanel();
+                }
+
+                renderFileList();
+            };
+
+            el.appendChild(btn);
         });
-    }
+    });
+}
 
     function renderArtefacts() {
         const container = document.getElementById("artefactsContainer");
