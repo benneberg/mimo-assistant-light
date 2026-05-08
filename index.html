@@ -864,8 +864,7 @@ if (metricsDiv) {
     }
 
     // --- UI CONTROLS ---
-
-    window.switchMainTab =function(tab) {
+    function switchMainTab(tab) {
       currentMainTab = tab;
       const editorPanel = document.getElementById("panel-editor");
       const chatPanel = document.getElementById("panel-chat");
@@ -900,7 +899,6 @@ if (metricsDiv) {
     }
 
     // --- EVENT LISTENERS ---
-    
     document.getElementById("projectToggle").onclick = (e) => {
         e.stopPropagation();
         document.getElementById('projectDropdown').classList.toggle('show');
