@@ -394,7 +394,6 @@
     }
 
     // --- CHAT LOGIC (Streaming) ---
-    
     function renderChatHistory() {
         const container = document.getElementById("chatMessages");
         container.innerHTML = ''; // Clear current
@@ -475,38 +474,53 @@
 
         const start = Date.now();
         
-        // System Prompt
-        let systemContent = "You are Mimo. Use the provided context to help.";
-        if (proj.context) systemContent += "\n\nPROJECT FILES:\n" + proj.context;
+        // System Prompt 
+      let systemContent = `You are Mimo, a helpful AI coding assistant. 
 
-        // History Context (simple last N messages to save tokens)
-        const history = proj.messages.slice(-10).map(m => {
-            if (m.role === 'user') {
-                if (m.content.image) return { role: 'user', content: [ {type:'text', text: m.content.text || "Image"}, {type:'image_url', image_url: {url: m.content.image}} ] };
-                return { role: 'user', content: m.content.text || "" };
-            }
-            return { role: 'assistant', content: m.content };
+IMPORTANT RULES:
+- Always confirm before taking action. Say what you plan to do first.
+- When creating files or code, explain what you're building.
+- Keep responses clear and concise.
+- When writing code, use proper markdown code blocks with language tags.
+- For HTML/CSS/JS projects, create complete, working code.`;
+
+    if (proj.context) systemContent += "\n\nPROJECT FILES:\n" + proj.context;
+
+    const history = proj.messages.slice(-10).map(m => {
+        if (m.role === 'user') {
+            if (m.content.image) return { 
+                role: 'user', 
+                content: [
+                    { type: 'text', text: m.content.text || "Image" },
+                    { type: 'image_url', image_url: { url: m.content.image } }
+                ] 
+            };
+            return { role: 'user', content: m.content.text || "" };
+        }
+        return { role: 'assistant', content: m.content };
+    });
+
+    try {
+        const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json", 
+                "Authorization": `Bearer ${apiKey}` 
+            },
+            body: JSON.stringify({ 
+                model, 
+                messages: [
+                    { role: "system", content: systemContent },
+                    ...history
+                ], 
+                stream: true,
+                temperature: 0.5 
+            })
         });
 
-        try {
-            const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json", 
-                    "Authorization": `Bearer ${apiKey}` 
-                },
-                body: JSON.stringify({ 
-                    model, 
-                    messages: [
-                        { role: "system", content: systemContent },
-                        ...history
-                    ], 
-                    stream: true, // ENABLE STREAMING
-                    temperature: 0.5 
-                })
-            });
+        if (!res.ok) throw new Error(`API Error ${res.status}`);
 
-            if (!res.ok) throw new Error(`API Error ${res.status}`);
+ 
 
             // 3. Handle Stream
             const reader = res.body.getReader();
