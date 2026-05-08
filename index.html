@@ -218,7 +218,7 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
+    <!-- Settings Modal -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4" onclick="this.classList.add('hidden')">
     <div class="glass max-w-md w-full rounded-3xl p-6 border border-slate-600 relative" onclick="event.stopPropagation()">
       <button onclick="document.getElementById('settingsModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl touch-btn">&times;</button>
@@ -228,6 +228,15 @@
           <label class="block text-sm text-slate-400 mb-2">API Key</label>
           <input id="apiKeyInput" type="password" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-5 py-4 focus:outline-none focus:border-cyan-400" placeholder="sk-...">
         </div>
+        
+        <!-- Fetch Models Button -->
+        <div class="flex gap-2">
+             <button onclick="fetchAvailableModels()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate"></i> Fetch Models
+            </button>
+        </div>
+        <p class="text-xs text-slate-500 -mt-2">Click to auto-detect available models for your key.</p>
+
         <button id="saveSettingsBtn" class="touch-btn w-full py-4 bg-white text-black rounded-2xl font-semibold hover:bg-slate-200 transition-colors">Save Settings</button>
       </div>
     </div>
