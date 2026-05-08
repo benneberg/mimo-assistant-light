@@ -687,7 +687,6 @@ IMPORTANT RULES:
     }
 
     // --- FILE LOGIC ---
-    
     document.getElementById("zipInput").addEventListener("change", async e => {
         const file = e.target.files[0];
         if (!file) return;
@@ -752,7 +751,6 @@ IMPORTANT RULES:
     }
 
     // --- HELPERS ---
-    
     function escapeHtml(text) {
       return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
@@ -779,7 +777,7 @@ IMPORTANT RULES:
       e.target.value = '';
     });
 
-    function removeImage() {
+   window.removeImage = function() {
       attachedImage = null;
       document.getElementById("imagePreview").classList.add("hidden");
     }
@@ -795,7 +793,7 @@ IMPORTANT RULES:
 
     // --- UI CONTROLS ---
 
-    eindow.switchMainTab =function(tab) {
+    window.switchMainTab =function(tab) {
       currentMainTab = tab;
       const editorPanel = document.getElementById("panel-editor");
       const chatPanel = document.getElementById("panel-chat");
@@ -821,7 +819,7 @@ IMPORTANT RULES:
       document.getElementById("artefactsView").classList.toggle("hidden", tab !== 1);
     }
 
-    function toggleFilePanel() {
+   window.toggleFilePanel = function() {
       document.getElementById("fileDrawer").classList.toggle("hidden");
     }
     
