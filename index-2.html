@@ -1,1 +1,1942 @@
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0d10" />
+  <title>MIMO_v2.5</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.min.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --bg0: #0d0d10;
+      --bg1: #111115;
+      --bg2: #17171d;
+      --bg3: #1e1e26;
+      --bg4: #252530;
+      --border: #2a2a38;
+      --border2: #333344;
+      --accent: #ff6b35;
+      --accent2: #00d4ff;
+      --accent3: #7c6af7;
+      --green: #3dffb0;
+      --red: #ff4a6b;
+      --orange: #ffb347;
+      --text0: #f0f0f8;
+      --text1: #9898b8;
+      --text2: #50507a;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg0);
+      color: var(--text0);
+      font-family: var(--mono);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* SCROLLBARS */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* TOPBAR */
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      height: 44px;
+      background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 50;
+    }
+
+    .logo-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--sans);
+      font-weight: 800;
+      font-size: 13px;
+      color: #0d0d10;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+
+    .logo-name {
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text0);
+    }
+
+    .logo-ver {
+      font-size: 9px;
+      font-weight: 400;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      font-family: var(--mono);
+      border: 1px solid rgba(255,107,53,0.3);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .sys-ok {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--green);
+      border: 1px solid rgba(61,255,176,0.2);
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-family: var(--mono);
+    }
+
+    /* PROJECT DROPDOWN */
+    .proj-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text1);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .proj-btn:hover { border-color: var(--border2); color: var(--text0); }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      z-index: 200;
+      min-width: 220px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      display: none;
+    }
+    .dropdown-menu.show { display: block; }
+
+    /* TOPBAR ACTIONS */
+    .top-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text1);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .top-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .top-btn.accent { background: rgba(255,107,53,0.1); border-color: rgba(255,107,53,0.3); color: var(--accent); }
+    .top-btn.accent:hover { background: rgba(255,107,53,0.2); }
+
+    /* MOBILE TABS */
+    #mobile-tabs {
+      display: none;
+      background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    @media (max-width: 1023px) { #mobile-tabs { display: flex; } }
+
+    .mob-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 10px;
+      font-family: var(--mono);
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text2);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .mob-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* LAYOUT */
+    #main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* SIDEBAR */
+    #sidebar {
+      width: 220px;
+      background: var(--bg1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text2);
+      padding: 6px 12px 4px;
+      font-family: var(--mono);
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--text1);
+      transition: all 0.1s;
+      font-family: var(--mono);
+    }
+    .file-item:hover { background: var(--bg3); color: var(--text0); }
+    .file-item.active { background: rgba(255,107,53,0.08); color: var(--accent); }
+    .file-item .fi-icon { opacity: 0.5; font-size: 10px; flex-shrink: 0; }
+    .file-item.active .fi-icon { opacity: 1; }
+
+    /* EDITOR */
+    #panel-editor {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .editor-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      height: 36px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .editor-meta {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .editor-meta span { color: var(--text1); }
+
+    /* CHAT PANEL */
+    #panel-chat {
+      width: 340px;
+      min-width: 280px;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg0);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 8px 12px;
+      background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .model-select {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text0);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 6px 10px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .model-select:focus { border-color: var(--accent); }
+
+    #chatMessages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .msg-user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #0d0d10;
+      border-radius: 10px 10px 2px 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      max-width: 85%;
+      line-height: 1.5;
+      font-family: var(--mono);
+    }
+
+    .msg-ai {
+      align-self: flex-start;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 2px 10px 10px 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      max-width: 90%;
+      line-height: 1.6;
+      font-family: var(--mono);
+      color: var(--text0);
+    }
+
+    .msg-meta {
+      font-size: 9px;
+      color: var(--text2);
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+    }
+
+    /* CHAT INPUT */
+    .chat-input-area {
+      background: var(--bg1);
+      border-top: 1px solid var(--border);
+      padding: 10px;
+      flex-shrink: 0;
+    }
+
+    .chat-textarea {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text0);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 8px 10px;
+      outline: none;
+      resize: none;
+      max-height: 100px;
+      overflow-y: auto;
+      transition: border-color 0.15s;
+      line-height: 1.5;
+    }
+    .chat-textarea:focus { border-color: var(--accent); }
+    .chat-textarea::placeholder { color: var(--text2); }
+
+    .chat-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text1);
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+    .action-btn:hover { border-color: var(--border2); color: var(--text0); }
+
+    .send-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #0d0d10;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .send-btn:hover { background: #ff8050; }
+    .send-btn:active { transform: scale(0.97); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* SKILLS PANEL (inside chat area, shown as tab) */
+    #panel-skills {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .skills-header {
+      padding: 10px 12px;
+      background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .skill-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin: 0 12px 8px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .skill-card:hover { border-color: var(--border2); }
+    .skill-card.active-skill { border-color: rgba(255,107,53,0.4); }
+
+    .skill-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .skill-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text0);
+      font-family: var(--mono);
+    }
+
+    .skill-status {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .skill-status.on { background: rgba(61,255,176,0.1); color: var(--green); border: 1px solid rgba(61,255,176,0.2); }
+    .skill-status.off { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+
+    .skill-desc {
+      font-size: 10px;
+      color: var(--text1);
+      padding: 0 12px 8px;
+      line-height: 1.5;
+      font-family: var(--mono);
+    }
+
+    .skill-body {
+      display: none;
+      padding: 10px 12px;
+      background: var(--bg0);
+      border-top: 1px solid var(--border);
+    }
+    .skill-body.open { display: block; }
+
+    .skill-body textarea {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text0);
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 8px;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      line-height: 1.5;
+    }
+    .skill-body textarea:focus { border-color: var(--accent); }
+
+    /* ARTEFACTS PANEL */
+    #panel-artefacts {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .artefact-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin: 0 12px 8px;
+      overflow: hidden;
+    }
+
+    .artefact-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      background: var(--bg3);
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--accent2);
+      font-weight: 600;
+    }
+
+    .artefact-copy {
+      font-size: 10px;
+      color: var(--text2);
+      cursor: pointer;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      transition: all 0.15s;
+    }
+    .artefact-copy:hover { color: var(--text0); border-color: var(--border2); }
+
+    .artefact-body {
+      padding: 8px 10px;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text1);
+      overflow: auto;
+      max-height: 150px;
+      line-height: 1.5;
+    }
+
+    /* CHAT SUB-TABS */
+    .chat-tabs {
+      display: flex;
+      background: var(--bg1);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .chat-tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      font-size: 9px;
+      font-family: var(--mono);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text2);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .chat-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* MODALS */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 440px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .modal-title {
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text0);
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-bottom: 5px;
+      font-family: var(--mono);
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg0);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text0);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+
+    .btn-primary {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: #0d0d10;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary:hover { background: #ff8050; }
+
+    .btn-ghost {
+      padding: 7px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text1);
+      font-family: var(--mono);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text0); }
+
+    /* IMAGE PREVIEW */
+    #imagePreview {
+      display: none;
+      margin-bottom: 8px;
+      position: relative;
+      width: fit-content;
+    }
+
+    #previewImg {
+      height: 60px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+    }
+
+    .img-remove {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 16px;
+      height: 16px;
+      background: var(--red);
+      color: white;
+      border-radius: 50%;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* MOBILE DRAWER */
+    #fileDrawer {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 500;
+    }
+    .drawer-inner {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg1);
+      border-radius: 12px 12px 0 0;
+      height: 70%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* SKILL BADGE IN SYSTEM PROMPT */
+    .skill-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.25);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-weight: 600;
+      margin: 2px;
+    }
+
+    /* STATUS BAR */
+    #statusbar {
+      height: 22px;
+      background: var(--bg1);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text2);
+    }
+
+    .status-item .val { color: var(--text1); }
+    .status-item .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    /* MOBILE panels */
+    @media (max-width: 1023px) {
+      #sidebar { display: none; }
+      #panel-chat { width: 100%; border-left: none; }
+      .mobile-hidden { display: none !important; }
+    }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .fade-in { animation: fadeIn 0.2s ease; }
+
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+
+</head>
+<body style="display:flex; flex-direction:column; height:100%;">
+
+<!-- TOPBAR -->
+
+<header id="topbar">
+  <div class="logo-block">
+    <div class="logo-badge">M</div>
+    <span class="logo-name">MIMO</span>
+    <span class="logo-ver">v2.5</span>
+    <span class="sys-ok">SYSTEM_OK</span>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:6px;">
+    <!-- Project selector -->
+    <div style="position:relative;">
+      <button class="proj-btn" id="projectToggle">
+        <i class="fa-solid fa-folder-tree" style="color:var(--accent); font-size:10px;"></i>
+        <span id="currentProjectName" style="max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">New Project</span>
+        <i class="fa-solid fa-chevron-down" style="font-size:9px; opacity:0.5;"></i>
+      </button>
+      <div id="projectDropdown" class="dropdown-menu">
+        <div style="padding:6px 10px; font-size:9px; color:var(--text2); letter-spacing:0.1em; text-transform:uppercase; border-bottom:1px solid var(--border); font-family:var(--mono);">Active Projects</div>
+        <div id="projectListContainer" style="max-height:160px; overflow:auto;"></div>
+        <div style="padding:6px; border-top:1px solid var(--border);">
+          <button onclick="createNewProject()" style="width:100%; padding:6px 10px; background:none; border:none; color:var(--green); font-size:11px; cursor:pointer; text-align:left; font-family:var(--mono); display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-plus"></i> New Project
+          </button>
+        </div>
+      </div>
+    </div>
+
+```
+<button class="top-btn accent" id="indexBtn"><i class="fa-solid fa-bolt"></i> Index</button>
+<button class="top-btn" id="exportZipBtn"><i class="fa-solid fa-file-export"></i></button>
+<button class="top-btn mobile-hidden" id="fileBtn"><i class="fa-solid fa-folder-open"></i></button>
+<button class="top-btn" id="settingsBtn"><i class="fa-solid fa-sliders"></i></button>
+```
+
+  </div>
+</header>
+
+<!-- MOBILE TABS -->
+
+<div id="mobile-tabs">
+  <div class="mob-tab active" onclick="switchMainTab(0)" id="mtab0">Editor</div>
+  <div class="mob-tab" onclick="switchMainTab(1)" id="mtab1">Chat</div>
+  <div class="mob-tab" onclick="switchMainTab(2)" id="mtab2">Artifacts</div>
+</div>
+
+<!-- MAIN LAYOUT -->
+
+<div id="main-layout" style="flex:1; display:flex; overflow:hidden; min-height:0;">
+
+  <!-- SIDEBAR -->
+
+  <aside id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Root_Directory</div>
+      <div id="fileList"></div>
+    </div>
+    <div style="flex:1;"></div>
+  </aside>
+
+  <!-- EDITOR -->
+
+  <div id="panel-editor" style="flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; border-right:1px solid var(--border);">
+    <div class="editor-bar">
+      <div class="editor-meta">
+        <span id="activeFileName" style="color:var(--text0);">no file open</span>
+        <span id="fileCount">0 files</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="top-btn" onclick="document.getElementById('zipInput').click()">
+          <i class="fa-solid fa-upload"></i> Upload ZIP
+        </button>
+      </div>
+    </div>
+    <div style="flex:1; position:relative; min-height:0;">
+      <div id="editor" style="position:absolute; inset:0;"></div>
+    </div>
+  </div>
+
+  <!-- CHAT + SKILLS PANEL -->
+
+  <div id="panel-chat">
+
+```
+<!-- CHAT SUB-TABS -->
+<div class="chat-tabs">
+  <div class="chat-tab active" onclick="switchChatTab('chat')" id="ctab-chat">Chat</div>
+  <div class="chat-tab" onclick="switchChatTab('skills')" id="ctab-skills">Skills</div>
+  <div class="chat-tab" onclick="switchChatTab('artefacts')" id="ctab-artefacts">Artifacts</div>
+</div>
+
+<!-- CHAT VIEW -->
+<div id="chatView" style="flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0;">
+  <div class="chat-header">
+    <select id="modelSelect" class="model-select">
+      <option value="mimo-v2.5-pro">MiMo-V2.5-Pro</option>
+      <option value="mimo-v2.5">MiMo-V2.5</option>
+      <option value="mimo-v2.5-tts">MiMo-V2.5-TTS</option>
+      <option value="mimo-v2.5-tts-voicedesign">MiMo-V2.5-TTS-VoiceDesign</option>
+      <option value="mimo-v2.5-tts-voiceclone">MiMo-V2.5-TTS-VoiceClone</option>
+      <option value="mimo-v2-pro">MiMo-V2-Pro</option>
+      <option value="mimo-v2-omni">MiMo-V2-Omni</option>
+      <option value="mimo-v2-tts">MiMo-V2-TTS</option>
+      <option value="mimo-v2-flash">MiMo-V2-Flash</option>
+    </select>
+  </div>
+  <div id="chatMessages" style="flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; min-height:0;"></div>
+  <div class="chat-input-area">
+    <div id="imagePreview">
+      <img id="previewImg" alt="attached">
+      <div class="img-remove" onclick="removeImage()">×</div>
+    </div>
+    <textarea class="chat-textarea" id="promptInput" rows="2" placeholder="▶ prompt mimo..."></textarea>
+    <div class="chat-actions">
+      <div style="display:flex; gap:6px;">
+        <div class="action-btn" onclick="triggerImageUpload()" title="Attach image">
+          <i class="fa-solid fa-image" style="font-size:11px;"></i>
+        </div>
+        <div class="action-btn" onclick="startVoiceInput()" title="Voice input">
+          <i class="fa-solid fa-microphone" style="font-size:11px;"></i>
+        </div>
+      </div>
+      <button class="send-btn" id="sendBtn" onclick="sendChat()">
+        <i class="fa-solid fa-paper-plane"></i> SEND
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SKILLS VIEW -->
+<div id="skillsView" style="flex:1; display:none; flex-direction:column; overflow:hidden; min-height:0;">
+  <div class="skills-header">
+    <div style="font-size:10px; font-family:var(--mono); font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text1);">
+      Active Skills <span id="activeSkillCount" style="color:var(--accent);">0</span>
+    </div>
+    <button class="btn-ghost" onclick="showAddSkillModal()" style="padding:4px 10px; font-size:10px;">
+      <i class="fa-solid fa-plus"></i> New
+    </button>
+  </div>
+  <div style="flex:1; overflow-y:auto; padding:10px 0;" id="skillsList"></div>
+  <div style="padding:10px 12px; border-top:1px solid var(--border);">
+    <button class="btn-primary" onclick="aiOptimizeSkills()" style="background:var(--bg3); color:var(--text1); border:1px solid var(--border);">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> AI: Optimize Active Skills
+    </button>
+  </div>
+</div>
+
+<!-- ARTEFACTS VIEW -->
+<div id="artefactsView" style="flex:1; display:none; flex-direction:column; overflow:hidden; min-height:0;">
+  <div style="padding:10px 12px; border-bottom:1px solid var(--border); background:var(--bg1); flex-shrink:0;">
+    <span style="font-size:10px; font-family:var(--mono); font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text1);">Artifacts</span>
+  </div>
+  <div style="flex:1; overflow-y:auto; padding:10px 0;" id="artefactsContainer">
+    <div style="padding:30px; text-align:center; color:var(--text2); font-size:11px; font-family:var(--mono);">No artifacts yet</div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+
+<div id="statusbar">
+  <div class="status-item"><span class="dot"></span><span class="val" id="sb-model">mimo-v2.5-pro</span></div>
+  <div class="status-item">NODE_01 <span class="val" id="sb-file">—</span></div>
+  <div class="status-item">MEM <span class="val" id="sb-mem">—</span></div>
+  <div class="status-item" style="margin-left:auto;">SKILLS <span class="val" id="sb-skills">0</span></div>
+</div>
+
+<!-- Hidden Inputs -->
+
+<input id="zipInput" type="file" accept=".zip" style="display:none;">
+<input id="imageInput" type="file" accept="image/*" style="display:none;">
+
+<!-- MOBILE FILE DRAWER -->
+
+<div id="fileDrawer" onclick="toggleFileDrawer()">
+  <div class="drawer-inner" onclick="event.stopPropagation()">
+    <div style="padding:12px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+      <span style="font-family:var(--sans); font-weight:700; font-size:14px;">Project Files</span>
+      <span onclick="toggleFileDrawer()" style="font-size:20px; cursor:pointer; color:var(--text1);">×</span>
+    </div>
+    <div id="drawerFileList" style="flex:1; overflow:auto; padding:8px 0;"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+
+<div class="modal-overlay" id="settingsModal" onclick="this.classList.remove('show')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div class="modal-title">Settings</div>
+      <span onclick="document.getElementById('settingsModal').classList.remove('show')" style="cursor:pointer; color:var(--text2); font-size:18px;">×</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <label class="form-label">API Key</label>
+        <input id="apiKeyInput" type="password" class="form-input" placeholder="sk-...">
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button onclick="fetchAvailableModels(event)" class="btn-ghost" style="flex:1;">
+          <i class="fa-solid fa-rotate"></i> Fetch Models
+        </button>
+        <button onclick="saveSettings()" class="btn-primary" style="flex:1;">Save</button>
+      </div>
+      <p style="font-size:10px; color:var(--text2); font-family:var(--mono);">API endpoint: token-plan-ams.xiaomimimo.com</p>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SKILL MODAL -->
+
+<div class="modal-overlay" id="addSkillModal" onclick="this.classList.remove('show')">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:500px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div class="modal-title">New Skill</div>
+      <span onclick="document.getElementById('addSkillModal').classList.remove('show')" style="cursor:pointer; color:var(--text2); font-size:18px;">×</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div>
+        <label class="form-label">Skill Name</label>
+        <input id="newSkillName" class="form-input" placeholder="e.g. Code Reviewer">
+      </div>
+      <div>
+        <label class="form-label">Description (when to trigger)</label>
+        <input id="newSkillDesc" class="form-input" placeholder="Use when the user asks to review code...">
+      </div>
+      <div>
+        <label class="form-label">Skill Instructions</label>
+        <textarea id="newSkillContent" class="form-input" rows="6" placeholder="# Code Reviewer&#10;&#10;When reviewing code:&#10;- Check for security vulnerabilities&#10;- Identify performance issues&#10;- Suggest improvements..."></textarea>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button onclick="aiGenerateSkill()" class="btn-ghost" style="flex:1;">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> AI Generate
+        </button>
+        <button onclick="addSkill()" class="btn-primary" style="flex:1;">Add Skill</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════
+  // STATE
+  // ═══════════════════════════════════════════════
+  let editor, currentFile = null;
+  let attachedImage = null;
+  let currentMainTab = 0;
+  let currentChatTab = 'chat';
+  let saveTimeout;
+
+  let db = { activeId: null, projects: {}, skills: [] };
+
+  // DEFAULT SKILLS
+  const DEFAULT_SKILLS = [
+    {
+      id: 'sk_code_review',
+      name: 'Code Reviewer',
+      desc: 'Use when reviewing, auditing, or analyzing code quality',
+      content: `# Code Reviewer\n\nWhen reviewing code:\n- Identify security vulnerabilities and risks\n- Check for performance bottlenecks\n- Verify error handling completeness\n- Suggest refactoring opportunities\n- Comment on code style and readability\n\nFormat output with clear sections: SECURITY, PERFORMANCE, QUALITY, SUGGESTIONS.`,
+      active: false
+    },
+    {
+      id: 'sk_img_gen',
+      name: 'Image Generation',
+      desc: 'Use when generating images using mimo-v2.5',
+      content: `# Image Generation\n\nModel: mimo-v2.5 (default for image tasks)\n\nWhen generating images:\n- Always use the mimo-v2.5 model\n- Craft detailed, descriptive prompts\n- Include style, lighting, composition details\n- Specify aspect ratio when relevant\n- Return the image URL or base64 result`,
+      active: true
+    },
+    {
+      id: 'sk_vid_gen',
+      name: 'Video Generation',
+      desc: 'Use when generating video content using mimo-v2.5',
+      content: `# Video Generation\n\nModel: mimo-v2.5 (default for video tasks)\n\nWhen generating videos:\n- Always use the mimo-v2.5 model\n- Define scene, motion, duration\n- Specify frame rate and resolution if needed\n- Include audio/music direction when relevant`,
+      active: true
+    },
+    {
+      id: 'sk_debug',
+      name: 'Debug Assistant',
+      desc: 'Use when debugging errors, tracing issues, or fixing bugs',
+      content: `# Debug Assistant\n\nWhen debugging:\n1. Reproduce the error — confirm exact conditions\n2. Isolate the cause — narrow down the failing component\n3. Propose a fix — with explanation of why it works\n4. Add prevention — suggest tests or guards\n\nAlways provide the corrected code block.`,
+      active: false
+    }
+  ];
+
+  // ═══════════════════════════════════════════════
+  // MONACO
+  // ═══════════════════════════════════════════════
+  require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs" } });
+  require(["vs/editor/editor.main"], () => {
+    editor = monaco.editor.create(document.getElementById("editor"), {
+      value: "// Select or create a project to begin\n// Use the Upload ZIP button to import files",
+      language: "javascript",
+      theme: "vs-dark",
+      automaticLayout: true,
+      fontSize: 13,
+      fontFamily: "'JetBrains Mono', monospace",
+      minimap: { enabled: false },
+      scrollBeyondLastLine: false,
+      wordWrap: 'on',
+      lineNumbers: 'on',
+      renderLineHighlight: 'line',
+      padding: { top: 10, bottom: 10 }
+    });
+    loadSavedModels();
+    editor.onDidChangeModelContent(() => {
+      if (currentFile && getActiveProject()) {
+        getActiveProject().files[currentFile] = editor.getValue();
+        triggerSave();
+      }
+    });
+    initApp();
+  });
+
+  // ═══════════════════════════════════════════════
+  // DATABASE
+  // ═══════════════════════════════════════════════
+  function loadDB() {
+    const saved = localStorage.getItem('mimo_db_v25');
+    if (saved) {
+      try { db = JSON.parse(saved); } catch(e) {}
+    }
+    if (!db.skills) db.skills = [...DEFAULT_SKILLS];
+    if (Object.keys(db.projects).length === 0) {
+      createNewProject("New Project", true);
+    }
+  }
+
+  function saveDB() {
+    try { localStorage.setItem('mimo_db_v25', JSON.stringify(db)); }
+    catch(e) { alert("Storage full! Please export projects."); }
+  }
+
+  function getActiveProject() { return db.projects[db.activeId]; }
+  function triggerSave() { clearTimeout(saveTimeout); saveTimeout = setTimeout(saveDB, 800); }
+
+  // ═══════════════════════════════════════════════
+  // PROJECTS
+  // ═══════════════════════════════════════════════
+  function createNewProject(name = "Untitled", isInit = false) {
+    const id = 'p_' + Date.now();
+    db.projects[id] = { id, name, files: {}, context: "", messages: [], artefacts: [] };
+    db.activeId = id;
+    saveDB();
+    if (!isInit) { switchProject(id); renderProjectDropdown(); }
+    return db.projects[id];
+  }
+
+  function switchProject(id) {
+    if (!db.projects[id]) return;
+    db.activeId = id;
+    saveDB();
+    currentFile = null;
+    attachedImage = null;
+    renderFileList();
+    const proj = getActiveProject();
+    const firstFile = Object.keys(proj.files)[0];
+    if (firstFile) { currentFile = firstFile; loadFile(firstFile); }
+    else if (editor) editor.setValue("// Empty project — upload a ZIP to add files");
+    renderChatHistory();
+    renderArtefacts();
+    document.getElementById('currentProjectName').textContent = proj.name;
+    closeDropdowns();
+  }
+
+  function loadFile(name) {
+    const proj = getActiveProject();
+    if (!proj || !proj.files[name]) return;
+    currentFile = name;
+    editor.setValue(proj.files[name]);
+    monaco.editor.setModelLanguage(editor.getModel(), getLang(name));
+    document.getElementById('activeFileName').textContent = name.split('/').pop();
+    document.getElementById('sb-file').textContent = name.split('/').pop();
+    renderFileList();
+  }
+
+  function deleteProject(id) {
+    if (Object.keys(db.projects).length <= 1) return alert("Cannot delete last project.");
+    if (!confirm("Delete this project?")) return;
+    delete db.projects[id];
+    if (db.activeId === id) db.activeId = Object.keys(db.projects)[0];
+    saveDB(); switchProject(db.activeId); renderProjectDropdown();
+  }
+
+  function renameProject(id) {
+    const name = prompt("New name:", db.projects[id].name);
+    if (!name) return;
+    db.projects[id].name = name;
+    saveDB(); renderProjectDropdown();
+    if (id === db.activeId) document.getElementById('currentProjectName').textContent = name;
+  }
+
+  function renderProjectDropdown() {
+    const c = document.getElementById('projectListContainer');
+    c.innerHTML = '';
+    Object.values(db.projects).forEach(p => {
+      const isActive = p.id === db.activeId;
+      const div = document.createElement('div');
+      div.style.cssText = `display:flex; align-items:center; justify-content:space-between; padding:6px 10px; margin:2px; border-radius:4px; cursor:pointer; background:${isActive ? 'rgba(255,107,53,0.1)' : 'none'}; color:${isActive ? 'var(--accent)' : 'var(--text1)'}; font-size:11px; font-family:var(--mono);`;
+      div.innerHTML = `<span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" onclick="switchProject('${p.id}')">${p.name}</span>
+        <div style="display:flex; gap:6px; margin-left:8px;">
+          <span onclick="event.stopPropagation();renameProject('${p.id}')" style="color:var(--text2); cursor:pointer; font-size:10px;" title="Rename"><i class="fa-solid fa-pen"></i></span>
+          <span onclick="event.stopPropagation();deleteProject('${p.id}')" style="color:var(--red); cursor:pointer; font-size:10px;" title="Delete"><i class="fa-solid fa-trash"></i></span>
+        </div>`;
+      c.appendChild(div);
+    });
+  }
+
+  // ═══════════════════════════════════════════════
+  // SKILLS
+  // ═══════════════════════════════════════════════
+  function renderSkills() {
+    const list = document.getElementById('skillsList');
+    list.innerHTML = '';
+    db.skills.forEach((skill, i) => {
+      const div = document.createElement('div');
+      div.className = `skill-card ${skill.active ? 'active-skill' : ''} fade-in`;
+      div.innerHTML = `
+        <div class="skill-card-header" onclick="toggleSkillBody(${i})">
+          <div>
+            <div class="skill-name">${escHtml(skill.name)}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;" onclick="event.stopPropagation()">
+              <input type="checkbox" ${skill.active ? 'checked' : ''} onchange="toggleSkill(${i}, this.checked)" style="accent-color:var(--accent);">
+              <span class="skill-status ${skill.active ? 'on' : 'off'}">${skill.active ? 'ON' : 'OFF'}</span>
+            </label>
+            <span onclick="event.stopPropagation(); deleteSkill(${i})" style="color:var(--text2); cursor:pointer; font-size:10px;"><i class="fa-solid fa-trash"></i></span>
+          </div>
+        </div>
+        <div class="skill-desc">${escHtml(skill.desc)}</div>
+        <div class="skill-body" id="skill-body-${i}">
+          <label class="form-label" style="margin-bottom:4px;">Instructions</label>
+          <textarea style="width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:4px; color:var(--text0); font-family:var(--mono); font-size:10px; padding:8px; resize:vertical; min-height:80px; outline:none; line-height:1.5;" onchange="updateSkillContent(${i}, this.value)">${escHtml(skill.content)}</textarea>
+
+```
+      <div style="display:flex; gap:6px; margin-top:8px;">
+        <button onclick="aiOptimizeSingleSkill(${i})" class="btn-ghost" style="flex:1; font-size:10px; padding:5px 8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Optimize</button>
+      </div>
+    </div>`;
+  list.appendChild(div);
+});
+
+const count = db.skills.filter(s => s.active).length;
+document.getElementById('activeSkillCount').textContent = count;
+document.getElementById('sb-skills').textContent = count;
+```
+
+}
+
+function toggleSkillBody(i) {
+const body = document.getElementById(`skill-body-${i}`);
+body.classList.toggle(‘open’);
+}
+
+function toggleSkill(i, val) {
+db.skills[i].active = val;
+const card = document.querySelectorAll(’.skill-card’)[i];
+const badge = card.querySelector(’.skill-status’);
+if (badge) { badge.textContent = val ? ‘ON’ : ‘OFF’; badge.className = `skill-status ${val ? 'on' : 'off'}`; }
+card.classList.toggle(‘active-skill’, val);
+saveDB(); updateStatusBar();
+document.getElementById(‘activeSkillCount’).textContent = db.skills.filter(s => s.active).length;
+document.getElementById(‘sb-skills’).textContent = db.skills.filter(s => s.active).length;
+}
+
+function updateSkillContent(i, val) {
+db.skills[i].content = val;
+saveDB();
+}
+
+function deleteSkill(i) {
+if (!confirm(`Delete skill "${db.skills[i].name}"?`)) return;
+db.skills.splice(i, 1);
+saveDB(); renderSkills();
+}
+
+function showAddSkillModal() {
+document.getElementById(‘newSkillName’).value = ‘’;
+document.getElementById(‘newSkillDesc’).value = ‘’;
+document.getElementById(‘newSkillContent’).value = ‘’;
+document.getElementById(‘addSkillModal’).classList.add(‘show’);
+}
+
+function addSkill() {
+const name = document.getElementById(‘newSkillName’).value.trim();
+const desc = document.getElementById(‘newSkillDesc’).value.trim();
+const content = document.getElementById(‘newSkillContent’).value.trim();
+if (!name) return alert(“Skill name required.”);
+db.skills.push({ id: ‘sk_’ + Date.now(), name, desc, content, active: true });
+saveDB(); renderSkills();
+document.getElementById(‘addSkillModal’).classList.remove(‘show’);
+}
+
+async function aiGenerateSkill() {
+const name = document.getElementById(‘newSkillName’).value.trim();
+const desc = document.getElementById(‘newSkillDesc’).value.trim();
+if (!name && !desc) return alert(“Enter a name or description first.”);
+const apiKey = localStorage.getItem(“mimo_api_key”);
+if (!apiKey) return alert(“Set API key in Settings first.”);
+
+```
+const btn = event.target.closest('button');
+btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+btn.disabled = true;
+
+try {
+  const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "mimo-v2.5-pro",
+      messages: [
+        { role: "system", content: "You are an expert at writing AI skill instructions. Write clear, specific, actionable skill content in markdown format." },
+        { role: "user", content: `Write skill instructions for: "${name || desc}"\n\nContext: ${desc}\n\nCreate a practical markdown skill guide that tells an AI assistant exactly how to handle this type of task. Be specific and actionable.` }
+      ],
+      max_completion_tokens: 600,
+      temperature: 0.7
+    })
+  });
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content || '';
+  document.getElementById('newSkillContent').value = content;
+} catch(e) {
+  alert("Error: " + e.message);
+} finally {
+  btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Generate';
+  btn.disabled = false;
+}
+```
+
+}
+
+async function aiOptimizeSingleSkill(i) {
+const skill = db.skills[i];
+const apiKey = localStorage.getItem(“mimo_api_key”);
+if (!apiKey) return alert(“Set API key in Settings first.”);
+
+```
+const textarea = document.querySelector(`#skill-body-${i} textarea`);
+textarea.disabled = true;
+textarea.style.opacity = '0.5';
+
+try {
+  const res = await fetch("https://token-plan-ams.xiaomimimo.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "mimo-v2.5-pro",
+      messages: [
+        { role: "system", content: "You are an expert at optimizing AI skill prompts. Make them clearer, more specific, and more actionable." },
+        { role: "user", content: `Optimize this AI skill instruction to be clearer and more effective. Keep the same intent but improve specificity and structure:\n\n${skill.content}` }
+      ],
+      max_completion_tokens: 600,
+      temperature: 0.5
+    })
+  });
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content || '';
+  db.skills[i].content = content;
+  textarea.value = content;
+  saveDB();
+} catch(e) {
+  alert("Error: " + e.message);
+} finally {
+  textarea.disabled = false;
+  textarea.style.opacity = '1';
+}
+```
+
+}
+
+async function aiOptimizeSkills() {
+const active = db.skills.filter(s => s.active);
+if (active.length === 0) return alert(“No active skills to optimize.”);
+const apiKey = localStorage.getItem(“mimo_api_key”);
+if (!apiKey) return alert(“Set API key in Settings first.”);
+alert(`Optimizing ${active.length} skills... This will run individually. Use the per-skill AI Optimize button.`);
+}
+
+function buildSkillsSystemPrompt() {
+const active = db.skills.filter(s => s.active);
+if (active.length === 0) return ‘’;
+return ‘\n\n## ACTIVE SKILLS\n’ + active.map(s => `### ${s.name}\n${s.content}`).join(’\n\n’);
+}
+
+// ═══════════════════════════════════════════════
+// MODELS
+// ═══════════════════════════════════════════════
+async function fetchAvailableModels(ev) {
+const apiKey = document.getElementById(“apiKeyInput”).value.trim();
+if (!apiKey) return alert(“Enter API Key first.”);
+const btn = ev.currentTarget || ev.target.closest(‘button’);
+const orig = btn.innerHTML;
+btn.innerHTML = ‘<i class="fa-solid fa-spinner fa-spin"></i>’;
+btn.disabled = true;
+try {
+const res = await fetch(“https://token-plan-ams.xiaomimimo.com/v1/models”, {
+headers: { “Authorization”: `Bearer ${apiKey}` }
+});
+if (!res.ok) throw new Error(`Status ${res.status}`);
+const data = await res.json();
+const models = data.data || [];
+if (!models.length) throw new Error(“No models found.”);
+const select = document.getElementById(“modelSelect”);
+select.innerHTML = ‘’;
+models.sort((a,b) => a.id < b.id ? -1 : 1).forEach(m => {
+const opt = document.createElement(“option”);
+opt.value = m.id; opt.textContent = m.id;
+select.appendChild(opt);
+});
+localStorage.setItem(“mimo_api_key”, apiKey);
+localStorage.setItem(“mimo_models”, JSON.stringify(models.map(m => m.id)));
+alert(`Loaded ${models.length} models`);
+document.getElementById(“settingsModal”).classList.remove(‘show’);
+} catch(e) { alert(“Failed: “ + e.message); }
+finally { btn.innerHTML = orig; btn.disabled = false; }
+}
+
+function loadSavedModels() {
+const saved = localStorage.getItem(“mimo_models”);
+if (!saved) return;
+try {
+const models = JSON.parse(saved);
+const select = document.getElementById(“modelSelect”);
+select.innerHTML = ‘’;
+models.forEach(id => {
+const opt = document.createElement(“option”);
+opt.value = id; opt.textContent = id;
+select.appendChild(opt);
+});
+} catch(e) {}
+}
+
+// ═══════════════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════════════
+function renderChatHistory() {
+const c = document.getElementById(“chatMessages”);
+c.innerHTML = ‘’;
+const proj = getActiveProject();
+if (!proj) return;
+proj.messages.forEach(msg => {
+if (msg.role === ‘user’ || msg.role === ‘assistant’)
+appendMessageDOM(msg.role, msg.content, msg.metadata, false);
+});
+setTimeout(() => c.scrollTop = c.scrollHeight, 50);
+}
+
+function appendMessageDOM(role, content, metadata = null, scroll = true) {
+const c = document.getElementById(“chatMessages”);
+const div = document.createElement(“div”);
+div.className = `${role === 'user' ? 'msg-user' : 'msg-ai'} fade-in`;
+
+```
+if (role === 'user' && content?.image) {
+  div.innerHTML += `<img src="${content.image}" style="max-height:60px; border-radius:4px; margin-bottom:6px; display:block;">`;
+}
+
+const text = typeof content === 'string' ? content : (content?.text || '');
+const skillsInjected = db.skills.filter(s => s.active).length > 0;
+
+div.innerHTML += `<div style="white-space:pre-wrap; word-break:break-words;">${escHtml(text)}</div>`;
+
+if (metadata) {
+  div.innerHTML += `<div class="msg-meta">
+    <span>${metadata.model || ''}</span>
+    <span>${metadata.latency ? metadata.latency + 'ms' : ''}</span>
+    ${skillsInjected && role === 'assistant' ? '<span style="color:var(--accent);">● skills</span>' : ''}
+  </div>`;
+}
+
+c.appendChild(div);
+if (scroll) c.scrollTop = c.scrollHeight;
+return div;
+```
+
+}
+
+async function sendChat() {
+const promptEl = document.getElementById(“promptInput”);
+const prompt = promptEl.value.trim();
+if (!prompt && !attachedImage) return;
+
+```
+const model = document.getElementById("modelSelect").value;
+document.getElementById('sb-model').textContent = model;
+const proj = getActiveProject();
+if (!proj) return;
+
+const userMsg = { role: "user", content: { text: prompt, image: attachedImage } };
+proj.messages.push(userMsg);
+saveDB();
+appendMessageDOM('user', userMsg.content);
+
+promptEl.value = '';
+promptEl.style.height = 'auto';
+removeImage();
+
+const sendBtn = document.getElementById("sendBtn");
+sendBtn.disabled = true;
+sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+const apiKey = localStorage.getItem("mimo_api_key");
+if (!apiKey) {
+  appendMessageDOM('assistant', 'Please add your API key in Settings first.');
+  sendBtn.disabled = false;
+  sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> SEND';
+  return;
+}
+
+const start = Date.now();
+let fullContent = '';
+let msgDom = null;
+
+// Build system prompt with skills
+let systemContent = `You are Mimo, a helpful AI coding assistant powered by MiMo-V2.5.
+```
+
+RULES:
+
+- When creating files or code, explain what you’re building.
+- Use proper markdown code blocks with language tags.
+- Be precise and direct.`;
+  
+  if (proj.context) systemContent += “\n\nPROJECT FILES:\n” + proj.context;
+  systemContent += buildSkillsSystemPrompt();
+  
+  const history = proj.messages.slice(-12).map(m => {
+  if (m.role === ‘user’ && m.content?.image) {
+  return { role: ‘user’, content: [
+  { type: ‘text’, text: m.content.text || “Image” },
+  { type: ‘image_url’, image_url: { url: m.content.image } }
+  ]};
+  }
+  return { role: m.role, content: typeof m.content === ‘string’ ? m.content : m.content?.text || ‘’ };
+  });
+  
+  try {
+  const res = await fetch(“https://token-plan-ams.xiaomimimo.com/v1/chat/completions”, {
+  method: “POST”,
+  headers: { “Content-Type”: “application/json”, “Authorization”: `Bearer ${apiKey}` },
+  body: JSON.stringify({
+  model,
+  messages: [{ role: “system”, content: systemContent }, …history],
+  stream: true,
+  temperature: 0.5,
+  max_completion_tokens: 2048
+  })
+  });
+  
+  ```
+  if (!res.ok) throw new Error(`API Error ${res.status}`);
+  msgDom = appendMessageDOM('assistant', '', { model, latency: 0 });
+  
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+  
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const jsonStr = line.slice(6).trim();
+      if (jsonStr === '[DONE]') break;
+      try {
+        const data = JSON.parse(jsonStr);
+        const token = data.choices?.[0]?.delta?.content || '';
+        fullContent += token;
+        const contentDiv = msgDom.querySelector('[style*="white-space"]');
+        if (contentDiv) contentDiv.innerText = fullContent;
+        msgDom.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } catch(e) {}
+    }
+  }
+  ```
+  
+  } catch(e) {
+  appendMessageDOM(‘assistant’, `Error: ${e.message}`);
+  } finally {
+  const latency = Date.now() - start;
+  if (fullContent) {
+  proj.messages.push({ role: ‘assistant’, content: fullContent, metadata: { model, latency } });
+  saveDB();
+  parseAndAddArtefacts(fullContent, proj);
+  }
+  sendBtn.disabled = false;
+  sendBtn.innerHTML = ‘<i class="fa-solid fa-paper-plane"></i> SEND’;
+  }
+  }
+  
+  // ═══════════════════════════════════════════════
+  // ARTEFACTS
+  // ═══════════════════════════════════════════════
+  function parseAndAddArtefacts(text, proj) {
+  const regex = /`(\w+)?\n([\s\S]*?)`/g;
+  let match;
+  proj.artefacts = proj.artefacts || [];
+  while ((match = regex.exec(text)) !== null) {
+  proj.artefacts.unshift({ type: ‘code’, lang: match[1] || ‘code’, content: match[2].trim(), ts: Date.now() });
+  }
+  saveDB(); renderArtefacts();
+  }
+  
+  function renderArtefacts() {
+  const c = document.getElementById(“artefactsContainer”);
+  const proj = getActiveProject();
+  const items = proj?.artefacts || [];
+  if (!items.length) {
+  c.innerHTML = ‘<div style="padding:30px; text-align:center; color:var(--text2); font-size:11px; font-family:var(--mono);">No artifacts yet</div>’;
+  return;
+  }
+  c.innerHTML = ‘’;
+  items.forEach((a, i) => {
+  const div = document.createElement(‘div’);
+  div.className = ‘artefact-card fade-in’;
+  div.innerHTML = `<div class="artefact-header"> <span>${a.lang}</span> <span class="artefact-copy" onclick="copyArtefact(${i})"><i class="fa-solid fa-copy"></i> Copy</span> </div> <pre class="artefact-body">${escHtml(a.content.slice(0, 500))}${a.content.length > 500 ? '\n...' : ''}</pre>`;
+  c.appendChild(div);
+  });
+  }
+  
+  function copyArtefact(i) {
+  const proj = getActiveProject();
+  navigator.clipboard?.writeText(proj.artefacts[i].content).then(() => {});
+  }
+  
+  // ═══════════════════════════════════════════════
+  // FILES
+  // ═══════════════════════════════════════════════
+  document.getElementById(“zipInput”).addEventListener(“change”, async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const zip = await JSZip.loadAsync(file);
+  const proj = getActiveProject();
+  if (!proj) return;
+  proj.files = {};
+  for (const name in zip.files) {
+  if (!zip.files[name].dir) {
+  try { proj.files[name] = await zip.files[name].async(“string”); } catch(e) {}
+  }
+  }
+  saveDB(); renderFileList();
+  e.target.value = ‘’;
+  const first = Object.keys(proj.files)[0];
+  if (first) loadFile(first);
+  });
+  
+  function renderFileList() {
+  const proj = getActiveProject();
+  const files = proj ? Object.keys(proj.files) : [];
+  document.getElementById(“fileCount”).textContent = `${files.length} files`;
+  
+  [‘fileList’, ‘drawerFileList’].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = ‘’;
+  
+  ```
+  if (!files.length) {
+    el.innerHTML = `<div style="padding:10px 12px; font-size:10px; color:var(--text2); font-family:var(--mono);">No files — upload a ZIP</div>`;
+    return;
+  }
+  
+  files.forEach(name => {
+    const btn = document.createElement('div');
+    btn.className = `file-item ${currentFile === name ? 'active' : ''}`;
+    btn.innerHTML = `<i class="fa-solid fa-file-code fi-icon"></i><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${name.split('/').pop()}</span>`;
+    btn.onclick = () => { loadFile(name); if (window.innerWidth < 1024) toggleFileDrawer(); };
+    el.appendChild(btn);
+  });
+  ```
+  
+  });
+  }
+  
+  // ═══════════════════════════════════════════════
+  // UI
+  // ═══════════════════════════════════════════════
+  function switchMainTab(tab) {
+  currentMainTab = tab;
+  const editorPanel = document.getElementById(“panel-editor”);
+  const chatPanel = document.getElementById(“panel-chat”);
+  const sidebar = document.getElementById(“sidebar”);
+  
+  if (window.innerWidth >= 1024) {
+  editorPanel.style.display = ‘flex’;
+  chatPanel.style.display = ‘flex’;
+  } else {
+  editorPanel.style.display = tab === 0 ? ‘flex’ : ‘none’;
+  chatPanel.style.display = tab !== 0 ? ‘flex’ : ‘none’;
+  if (tab === 2) switchChatTab(‘artefacts’);
+  else if (tab === 1) switchChatTab(‘chat’);
+  }
+  
+  for (let i = 0; i < 3; i++) {
+  const t = document.getElementById(`mtab${i}`);
+  if (t) t.className = `mob-tab ${i === tab ? 'active' : ''}`;
+  }
+  }
+  
+  function switchChatTab(tab) {
+  currentChatTab = tab;
+  document.getElementById(‘chatView’).style.display = tab === ‘chat’ ? ‘flex’ : ‘none’;
+  document.getElementById(‘skillsView’).style.display = tab === ‘skills’ ? ‘flex’ : ‘none’;
+  document.getElementById(‘artefactsView’).style.display = tab === ‘artefacts’ ? ‘flex’ : ‘none’;
+  
+  [‘chat’,‘skills’,‘artefacts’].forEach(t => {
+  const el = document.getElementById(`ctab-${t}`);
+  if (el) el.className = `chat-tab ${t === tab ? 'active' : ''}`;
+  });
+  
+  if (tab === ‘skills’) renderSkills();
+  if (tab === ‘artefacts’) renderArtefacts();
+  }
+  
+  function toggleFileDrawer() {
+  const d = document.getElementById(“fileDrawer”);
+  d.style.display = d.style.display === ‘block’ ? ‘none’ : ‘block’;
+  if (d.style.display === ‘block’) renderFileList();
+  }
+  
+  function closeDropdowns() {
+  document.getElementById(‘projectDropdown’).classList.remove(‘show’);
+  }
+  
+  function updateStatusBar() {
+  document.getElementById(‘sb-skills’).textContent = db.skills.filter(s => s.active).length;
+  const bytes = JSON.stringify(db).length;
+  document.getElementById(‘sb-mem’).textContent = (bytes / 1024).toFixed(1) + ’ KB’;
+  }
+  
+  // ═══════════════════════════════════════════════
+  // HELPERS
+  // ═══════════════════════════════════════════════
+  function escHtml(text) {
+  return String(text).replace(/&/g,”&”).replace(/</g,”<”).replace(/>/g,”>”);
+  }
+  
+  function getLang(filename) {
+  const ext = filename.split(’.’).pop().toLowerCase();
+  const map = { html:‘html’, css:‘css’, json:‘json’, ts:‘typescript’, tsx:‘typescript’, jsx:‘javascript’, py:‘python’, md:‘markdown’, sh:‘shell’, yml:‘yaml’, yaml:‘yaml’, xml:‘xml’ };
+  return map[ext] || ‘javascript’;
+  }
+  
+  function triggerImageUpload() { document.getElementById(“imageInput”).click(); }
+  
+  document.getElementById(“imageInput”).addEventListener(“change”, e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+  attachedImage = ev.target.result;
+  document.getElementById(“previewImg”).src = attachedImage;
+  document.getElementById(“imagePreview”).style.display = ‘block’;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = ‘’;
+  });
+  
+  function removeImage() {
+  attachedImage = null;
+  document.getElementById(“imagePreview”).style.display = ‘none’;
+  }
+  
+  function startVoiceInput() {
+  const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Speech) return alert(“Voice not supported in this browser.”);
+  const rec = new Speech();
+  rec.lang = “en-US”;
+  rec.onresult = e => document.getElementById(“promptInput”).value = e.results[0][0].transcript;
+  rec.start();
+  }
+  
+  function saveSettings() {
+  localStorage.setItem(“mimo_api_key”, document.getElementById(“apiKeyInput”).value.trim());
+  document.getElementById(“settingsModal”).classList.remove(‘show’);
+  }
+  
+  // ═══════════════════════════════════════════════
+  // EVENT WIRING
+  // ═══════════════════════════════════════════════
+  document.getElementById(“projectToggle”).onclick = e => {
+  e.stopPropagation();
+  document.getElementById(‘projectDropdown’).classList.toggle(‘show’);
+  };
+  document.addEventListener(‘click’, closeDropdowns);
+  
+  document.getElementById(“indexBtn”).onclick = () => {
+  const proj = getActiveProject();
+  if (!proj || !Object.keys(proj.files).length) return alert(“No files to index.”);
+  let ctx = ‘’;
+  Object.entries(proj.files).slice(0, 40).forEach(([n, c]) => {
+  ctx += `FILE: ${n}\n${c.slice(0, 25000)}\n---\n`;
+  });
+  proj.context = ctx;
+  saveDB();
+  appendMessageDOM(‘assistant’, `✅ Indexed ${Object.keys(proj.files).length} files. Context is now available to Mimo.`);
+  };
+  
+  document.getElementById(“exportZipBtn”).onclick = async () => {
+  const proj = getActiveProject();
+  if (!proj) return;
+  const zip = new JSZip();
+  Object.entries(proj.files).forEach(([n, c]) => zip.file(n, c));
+  const blob = await zip.generateAsync({ type: “blob” });
+  const a = document.createElement(“a”);
+  a.href = URL.createObjectURL(blob);
+  a.download = `${proj.name}.zip`;
+  a.click();
+  };
+  
+  document.getElementById(“settingsBtn”).onclick = () => {
+  const saved = localStorage.getItem(“mimo_api_key”);
+  if (saved) document.getElementById(“apiKeyInput”).value = saved;
+  document.getElementById(“settingsModal”).classList.add(‘show’);
+  };
+  
+  const txt = document.getElementById(“promptInput”);
+  txt.addEventListener(“input”, () => {
+  txt.style.height = ‘auto’;
+  txt.style.height = Math.min(txt.scrollHeight, 100) + ‘px’;
+  });
+  txt.addEventListener(“keydown”, e => {
+  if (e.key === “Enter” && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  });
+  
+  document.getElementById(“modelSelect”).onchange = e => {
+  document.getElementById(‘sb-model’).textContent = e.target.value;
+  };
+  
+  // ═══════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════
+  function initApp() {
+  loadDB();
+  switchProject(db.activeId);
+  renderProjectDropdown();
+  renderSkills();
+  const savedKey = localStorage.getItem(“mimo_api_key”);
+  if (savedKey) document.getElementById(“apiKeyInput”).value = savedKey;
+  if (window.innerWidth < 1024) switchMainTab(1);
+  updateStatusBar();
+  setInterval(updateStatusBar, 5000);
+  console.log(“MIMO_v2.5 ready.”);
+  }
+  
+  // Expose globals
+  window.createNewProject = createNewProject;
+  window.switchProject = switchProject;
+  window.renameProject = renameProject;
+  window.deleteProject = deleteProject;
+  window.fetchAvailableModels = fetchAvailableModels;
+  window.sendChat = sendChat;
+  window.removeImage = removeImage;
+  window.toggleFileDrawer = toggleFileDrawer;
+  window.startVoiceInput = startVoiceInput;
+  window.addSkill = addSkill;
+  window.aiGenerateSkill = aiGenerateSkill;
+  window.aiOptimizeSingleSkill = aiOptimizeSingleSkill;
+  window.aiOptimizeSkills = aiOptimizeSkills;
+  window.showAddSkillModal = showAddSkillModal;
+  window.toggleSkill = toggleSkill;
+  window.updateSkillContent = updateSkillContent;
+  window.deleteSkill = deleteSkill;
+  window.toggleSkillBody = toggleSkillBody;
+  window.copyArtefact = copyArtefact;
+  window.switchChatTab = switchChatTab;
+  window.switchMainTab = switchMainTab;
+  window.saveSettings = saveSettings;
+
+</script>
+
+<!-- DevConsole (insikt.js equivalent) -->
+
+<script>
+(function(){
+  // Inject DevConsole FAB
+  const fab = document.createElement('button');
+  fab.id = 'dc-fab';
+  fab.title = 'DevConsole';
+  fab.style.cssText = `position:fixed;bottom:30px;right:16px;width:36px;height:36px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text1);font-size:14px;cursor:pointer;z-index:99999;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.4);font-family:var(--mono);transition:all 0.2s;`;
+  fab.innerHTML = '⌥';
+  fab.onmouseover = () => { fab.style.borderColor='var(--accent)'; fab.style.color='var(--accent)'; };
+  fab.onmouseout  = () => { fab.style.borderColor='var(--border2)'; fab.style.color='var(--text1)'; };
+  document.body.appendChild(fab);
+
+  const panel = document.createElement('div');
+  panel.id = 'dc-panel';
+  panel.style.cssText = `position:fixed;bottom:0;left:0;right:0;height:280px;background:var(--bg1);border-top:1px solid var(--border);z-index:99998;display:none;flex-direction:column;font-family:var(--mono);`;
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--accent);flex:1;">DEV_CONSOLE</span>
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>
+      <button onclick="document.getElementById('dc-panel').style.display='none'" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;">×</button>
+    </div>
+    <div id="dc-out" style="flex:1;overflow-y:auto;padding:8px 12px;font-size:11px;color:var(--text1);line-height:1.5;"></div>
+    <div style="display:flex;gap:8px;padding:6px 10px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;">
+      <input id="dc-in" placeholder="▶ execute javascript…" style="flex:1;background:var(--bg0);border:1px solid var(--border);border-radius:4px;color:var(--text0);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;" autocomplete="off">
+      <button id="dc-run" style="background:var(--accent);color:#0d0d10;border:none;border-radius:4px;padding:5px 12px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">RUN</button>
+    </div>`;
+  document.body.appendChild(panel);
+
+  fab.onclick = () => { panel.style.display = panel.style.display === 'none' ? 'flex' : 'none'; };
+
+  const out = document.getElementById('dc-out');
+  const inp = document.getElementById('dc-in');
+  const run = document.getElementById('dc-run');
+
+  const ts = () => new Date().toTimeString().slice(0,8);
+  const log = (type, ...args) => {
+    const div = document.createElement('div');
+    const colors = { log: 'var(--text0)', warn: 'var(--orange)', error: 'var(--red)', info: 'var(--accent2)' };
+    div.style.cssText = `color:${colors[type]||'var(--text0)'};padding:2px 0;border-left:${type!=='log'?'2px solid '+colors[type]+';padding-left:6px':''};`;
+    div.innerHTML = `<span style="color:var(--text2);margin-right:8px;">${ts()}</span>${args.map(a => typeof a === 'object' ? '<pre style="display:inline;white-space:pre-wrap;">'+JSON.stringify(a,null,2)+'</pre>' : String(a)).join(' ')}`;
+
+out.appendChild(div);
+out.scrollTop = out.scrollHeight;
+
+};
+
+[‘log’,‘warn’,‘error’,‘info’].forEach(lvl => {
+const orig = console[lvl].bind(console);
+console[lvl] = (…args) => { orig(…args); log(lvl, …args); };
+});
+
+const exec = () => {
+const code = inp.value.trim();
+if (!code) return;
+log(‘log’, ’▶ ’ + code);
+try {
+const r = (0,eval)(code);
+if (r !== undefined) log(‘log’, r);
+} catch(e) { log(‘error’, e.toString()); }
+inp.value = ‘’;
+};
+
+run.onclick = exec;
+inp.addEventListener(‘keydown’, e => { if (e.key === ‘Enter’) exec(); });
+log(‘info’, ‘✅ MIMO_v2.5 DevConsole ready’);
+})();
+</script>
+
+</body>
+</html>
