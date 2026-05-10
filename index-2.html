@@ -818,13 +818,10 @@
       </div>
     </div>
 
-```
 <button class="top-btn accent" id="indexBtn"><i class="fa-solid fa-bolt"></i> Index</button>
 <button class="top-btn" id="exportZipBtn"><i class="fa-solid fa-file-export"></i></button>
 <button class="top-btn mobile-hidden" id="fileBtn"><i class="fa-solid fa-folder-open"></i></button>
 <button class="top-btn" id="settingsBtn"><i class="fa-solid fa-sliders"></i></button>
-```
-
   </div>
 </header>
 
@@ -873,7 +870,7 @@
 
   <div id="panel-chat">
 
-```
+
 <!-- CHAT SUB-TABS -->
 <div class="chat-tabs">
   <div class="chat-tab active" onclick="switchChatTab('chat')" id="ctab-chat">Chat</div>
@@ -1226,7 +1223,6 @@
           <label class="form-label" style="margin-bottom:4px;">Instructions</label>
           <textarea style="width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:4px; color:var(--text0); font-family:var(--mono); font-size:10px; padding:8px; resize:vertical; min-height:80px; outline:none; line-height:1.5;" onchange="updateSkillContent(${i}, this.value)">${escHtml(skill.content)}</textarea>
 
-```
       <div style="display:flex; gap:6px; margin-top:8px;">
         <button onclick="aiOptimizeSingleSkill(${i})" class="btn-ghost" style="flex:1; font-size:10px; padding:5px 8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Optimize</button>
       </div>
@@ -1237,7 +1233,7 @@
 const count = db.skills.filter(s => s.active).length;
 document.getElementById('activeSkillCount').textContent = count;
 document.getElementById('sb-skills').textContent = count;
-```
+
 
 }
 
@@ -1292,7 +1288,7 @@ if (!name && !desc) return alert(“Enter a name or description first.”);
 const apiKey = localStorage.getItem(“mimo_api_key”);
 if (!apiKey) return alert(“Set API key in Settings first.”);
 
-```
+
 const btn = event.target.closest('button');
 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
 btn.disabled = true;
@@ -1320,7 +1316,6 @@ try {
   btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Generate';
   btn.disabled = false;
 }
-```
 
 }
 
@@ -1329,7 +1324,7 @@ const skill = db.skills[i];
 const apiKey = localStorage.getItem(“mimo_api_key”);
 if (!apiKey) return alert(“Set API key in Settings first.”);
 
-```
+
 const textarea = document.querySelector(`#skill-body-${i} textarea`);
 textarea.disabled = true;
 textarea.style.opacity = '0.5';
@@ -1359,7 +1354,7 @@ try {
   textarea.disabled = false;
   textarea.style.opacity = '1';
 }
-```
+
 
 }
 
@@ -1445,7 +1440,7 @@ const c = document.getElementById(“chatMessages”);
 const div = document.createElement(“div”);
 div.className = `${role === 'user' ? 'msg-user' : 'msg-ai'} fade-in`;
 
-```
+
 if (role === 'user' && content?.image) {
   div.innerHTML += `<img src="${content.image}" style="max-height:60px; border-radius:4px; margin-bottom:6px; display:block;">`;
 }
@@ -1466,7 +1461,7 @@ if (metadata) {
 c.appendChild(div);
 if (scroll) c.scrollTop = c.scrollHeight;
 return div;
-```
+
 
 }
 
@@ -1475,7 +1470,7 @@ const promptEl = document.getElementById(“promptInput”);
 const prompt = promptEl.value.trim();
 if (!prompt && !attachedImage) return;
 
-```
+
 const model = document.getElementById("modelSelect").value;
 document.getElementById('sb-model').textContent = model;
 const proj = getActiveProject();
@@ -1508,7 +1503,7 @@ let msgDom = null;
 
 // Build system prompt with skills
 let systemContent = `You are Mimo, a helpful AI coding assistant powered by MiMo-V2.5.
-```
+
 
 RULES:
 
@@ -1542,7 +1537,7 @@ RULES:
   })
   });
   
-  ```
+  
   if (!res.ok) throw new Error(`API Error ${res.status}`);
   msgDom = appendMessageDOM('assistant', '', { model, latency: 0 });
   
@@ -1571,7 +1566,7 @@ RULES:
       } catch(e) {}
     }
   }
-  ```
+  
   
   } catch(e) {
   appendMessageDOM(‘assistant’, `Error: ${e.message}`);
@@ -1653,7 +1648,7 @@ RULES:
   if (!el) return;
   el.innerHTML = ‘’;
   
-  ```
+
   if (!files.length) {
     el.innerHTML = `<div style="padding:10px 12px; font-size:10px; color:var(--text2); font-family:var(--mono);">No files — upload a ZIP</div>`;
     return;
@@ -1666,7 +1661,7 @@ RULES:
     btn.onclick = () => { loadFile(name); if (window.innerWidth < 1024) toggleFileDrawer(); };
     el.appendChild(btn);
   });
-  ```
+  
   
   });
   }
