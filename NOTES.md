@@ -1,3 +1,11 @@
+I have access to all mimo ai models as described in this document.
+I want to create a tool for my own use that:
+Let me use any relevant mimo ai models and functionality together with any of my github repositories or a new empty project where i can upload zip or single files and content.
+
+I want to be able to ask ai anything about the codebase, to refactor, to generate new code based on specification markdown files, to review, complete, run tests anything regarding development. I want it to be as lightweight and fast as possible, it should have smart methods like use of tools, smart indexing of code and peristant memory (can donwith filebased for now) i would like if possible to keep it client side and i need it to be fully functional to work with and use on my iphone. Please share your thoughts and feedback and help me create an open-specs.md for this that i can start build today
+
+
+
 My available Models names:
 MiMo-V2.5-Pro, MiMo-V2.5, MiMo-V2.5-TTS-VoiceClone, MiMo-V2.5-TTS-VoiceDesign、MiMo-V2.5-TTS, MiMo-V2-Pro, MiMo-V2-Omni, MiMo-V2-TTS
 
